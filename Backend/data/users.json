@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "password": "password123",
+    "role": "admin"
+  },
+  {
+    "name": "Agent Alice",
+    "email": "alice@example.com",
+    "password": "password123",
+    "role": "agent",
+    "commissionRate": 10
+  },
+  {
+    "name": "Agent Bob",
+    "email": "bob@example.com",
+    "password": "password123",
+    "role": "agent",
+    "commissionRate": 12
+  }
+]

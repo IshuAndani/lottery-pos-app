@@ -1,0 +1,46 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.env
+
+# Logs
+logs/
+*.log
+debug.log
+*.pid
+*.seed
+*.pid.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# React (Vite or CRA)
+.vite/
+.cache/
+*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test coverage
+coverage/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# Mac system files
+*.DS_Store
+
+# MongoDB dump
+dump/

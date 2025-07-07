@@ -1,0 +1,13 @@
+[
+  {
+    "name": "Evening Express Draw",
+    "status": "open",
+    "payoutRule": 10,
+    "numberOfWinningNumbers": 3,
+    "drawDate": "2025-12-31T22:00:00.000Z",
+    "validNumberRange": {
+      "min": 0,
+      "max": 99
+    }
+  }
+]
