@@ -9,7 +9,7 @@ const Ticket = require('./models/ticketModel');
 const Transaction = require('./models/transactionModel');
 
 // Connect to DB
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/lottery-pos');
 
 // Read JSON files
 const users = JSON.parse(fs.readFileSync(`${__dirname}/data/users.json`, 'utf-8'));
