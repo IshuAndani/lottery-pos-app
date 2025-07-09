@@ -17,8 +17,9 @@ const printerRouter = require('./routes/printerRoutes');
 const app = express();
 
 // --- Global Middlewares ---
+// Use environment variable for CORS origin in production
 app.use(cors({
-  origin: 'http://localhost:5173', // The URL of your React app
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true                // This allows cookies to be sent and received
 }));
 app.use(helmet());

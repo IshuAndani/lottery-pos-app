@@ -36,10 +36,16 @@ exports.declareWinningNumbers = async (lotteryId, winningNumbers) => {
   const tickets = await Ticket.find({ lottery: lotteryId });
   const payoutMultiplier = lottery.payoutRule; 
 
+  // Convert winning numbers to actual numbers for a reliable comparison,
+  // as bet numbers might be stored with leading zeros (e.g., "01")
+  // while declared winners might be without (e.g., "1").
+  const winningNumbersAsInt = winningNumbers.map(n => parseInt(n, 10));
+
   // Evaluate each ticket
   for (const ticket of tickets) {
     for (const bet of ticket.bets) {
-      if (winningNumbers.includes(bet.number)) {
+      // Also convert the bet number to an integer for comparison
+      if (winningNumbersAsInt.includes(parseInt(bet.number, 10))) {
         ticket.isWinner = true;
         ticket.payoutAmount += bet.amount * payoutMultiplier;
       }

@@ -4,16 +4,16 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 
 const signToken = id => {
-  const expiry = `${process.env.JWT_EXPIRES_IN}d`;
+  // const expiry = `${process.env.JWT_EXPIRES_IN}d`;
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: expiry || '90d', // Token expires in 90 days
+    expiresIn: process.env.JWT_EXPIRES_IN || '90d', // Token expires in 90 days
   });
 };
 
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
-  const cookieExpiresInDays = Number(process.env.JWT_EXPIRES_IN) || 90;
+  const cookieExpiresInDays = Number(process.env.JWT_COOKIE_EXPIRES_IN) || 90;
 
   const cookieOptions = {
     // Expiry should be a Date object
