@@ -5,11 +5,11 @@ exports.createTicket = asyncHandler(async (req, res, next) => {
   const { lotteryId, bets } = req.body;
   const agentId = req.user.id; // From the protect middleware
 
-  const ticket = await ticketService.sellTicket(lotteryId, agentId, bets);
+  const {ticket, transactionId} = await ticketService.sellTicket(lotteryId, agentId, bets);
 
   res.status(201).json({
     status: 'success',
-    data: { ticket },
+    data: { ticket , transactionId, agentId},
   });
 });
 

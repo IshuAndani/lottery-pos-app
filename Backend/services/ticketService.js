@@ -32,6 +32,7 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
   const netOwedToAdmin = totalAmount - commissionAmount;
   const session = await mongoose.startSession();
   let newTicket;
+  let transaction;
   try {
     session.startTransaction();
 
@@ -45,7 +46,7 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     }], { session });
 
     // 2. Create a commission transaction
-    await Transaction.create([{
+    [transaction] = await Transaction.create([{
       agent: agentId,
       ticket: newTicket._id,
       type: 'commission',
@@ -70,7 +71,7 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     session.endSession();
   }
   
-  return newTicket;
+  return {ticket : newTicket, transactionId : transaction._id};
 };
 
 exports.checkTicketStatus = async (ticketId) => {

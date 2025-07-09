@@ -15,6 +15,37 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+
+/**
+ * This interceptor is the key to robust error handling. It catches all
+ * failed API calls and standardizes the error message before it reaches
+ * your components.
+ */
+apiClient.interceptors.response.use(
+  // Any status code within the 2xx range will just pass through.
+  (response) => response,
+  // Any status code outside the 2xx range will trigger this function.
+  (error) => {
+    let errorMessage = 'An unexpected error occurred. Please try again.';
+
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // (e.g., 401, 404, 500). We can use the message from the server.
+      errorMessage = error.response.data?.message || errorMessage;
+    } else if (error.request) {
+      // The request was made but no response was received. This is a network error.
+      errorMessage = 'Cannot connect to the server. Please check your network connection.';
+    } else {
+      // Something else happened in setting up the request that triggered an Error.
+      errorMessage = error.message;
+    }
+
+    // We reject the promise with a new Error object, ensuring a consistent
+    // error structure (`err.message`) in all .catch() blocks.
+    return Promise.reject(new Error(errorMessage));
+  }
+);
+
 /**
  * =================================================================
  * AUTHENTICATION API CALLS
@@ -28,14 +59,14 @@ const apiClient = axios.create({
  * @returns {Promise<Object>} The response data from the server.
  */
 export const loginUser = async (email, password) => {
-  try {
+  // try {
     const response = await apiClient.post('/users/login', { email, password });
     return response.data;
-  } catch (error) {
+  // } catch (error) {
     // Axios wraps the error from the server in error.response.
     // We re-throw it to be handled by the component that called this function.
-    throw error.response.data || new Error('Network error during login');
-  }
+    // throw error.response?.data || new Error('Network error during login');
+  // }
 };
 
 export const logoutUser = async () => {
@@ -81,7 +112,7 @@ export const getOpenLotteries = async () => {
     console.log(response);
     return response.data.data.lotteries;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch open lotteries');
+    throw error.response?.data || new Error('Failed to fetch open lotteries');
   }
 };
 
@@ -132,9 +163,9 @@ export const getSoldNumbersForLottery = async (lotteryId) => {
 export const createTicket = async (ticketData) => {
   try {
     const response = await apiClient.post('/tickets', ticketData);
-    return response.data.data.ticket;
+    return response.data.data;
   } catch (error) {
-    throw error.response.data || new Error('Failed to create ticket');
+    throw error.response?.data || new Error('Failed to create ticket');
   }
 };
 
@@ -148,7 +179,7 @@ export const getTicketById = async (ticketId) => {
     const response = await apiClient.get(`/tickets/${ticketId}`);
     return response.data.data.ticket;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch ticket');
+    throw error.response?.data || new Error('Failed to fetch ticket');
   }
 };
 
@@ -162,7 +193,7 @@ export const payoutTicket = async (ticketId) => {
     const response = await apiClient.post(`/tickets/${ticketId}/payout`);
     return response.data;
   } catch (error) {
-    throw error.response.data || new Error('Failed to process payout');
+    throw error.response?.data || new Error('Failed to process payout');
   }
 };
 
@@ -181,7 +212,7 @@ export const getAgentReport = async (params) => {
     const response = await apiClient.get('/reports/agent/dashboard', { params });
     return response.data.data.report;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch agent report');
+    throw error.response?.data || new Error('Failed to fetch agent report');
   }
 };
 
@@ -194,7 +225,7 @@ export const getAllAgents = async () => {
     const response = await apiClient.get('/users/agents');
     return response.data.data.agents;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch agents');
+    throw error.response?.data || new Error('Failed to fetch agents');
   }
 };
 
@@ -203,7 +234,7 @@ export const createAgent = async (agentData) => {
     const response = await apiClient.post('/users/agents', agentData);
     return response.data.data.agent;
   } catch (error) {
-    throw error.response.data || new Error('Failed to create agent');
+    throw error.response?.data || new Error('Failed to create agent');
   }
 };
 
@@ -212,7 +243,7 @@ export const updateAgent = async (agentId, agentData) => {
     const response = await apiClient.patch(`/users/agents/${agentId}`, agentData);
     return response.data.data.agent;
   } catch (error) {
-    throw error.response.data || new Error('Failed to update agent');
+    throw error.response?.data || new Error('Failed to update agent');
   }
 };
 
@@ -222,7 +253,7 @@ export const getAllLotteriesAdmin = async () => {
     const response = await apiClient.get('/lotteries');
     return response.data.data.lotteries;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch lotteries');
+    throw error.response?.data || new Error('Failed to fetch lotteries');
   }
 };
 
@@ -231,7 +262,7 @@ export const createLottery = async (lotteryData) => {
     const response = await apiClient.post('/lotteries', lotteryData);
     return response.data.data.lottery;
   } catch (error) {
-    throw error.response.data || new Error('Failed to create lottery');
+    throw error.response?.data || new Error('Failed to create lottery');
   }
 };
 
@@ -240,7 +271,7 @@ export const declareWinners = async (lotteryId, winningNumbers) => {
     const response = await apiClient.post(`/lotteries/${lotteryId}/declare-winners`, { winningNumbers });
     return response.data;
   } catch (error) {
-    throw error.response.data || new Error('Failed to declare winners');
+    throw error.response?.data || new Error('Failed to declare winners');
   }
 };
 
@@ -249,7 +280,7 @@ export const getLotteryFinancials = async (lotteryId) => {
     const response = await apiClient.get(`/reports/admin/lottery/${lotteryId}`);
     return response.data.data.report;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch lottery financials');
+    throw error.response?.data || new Error('Failed to fetch lottery financials');
   }
 };
 
@@ -259,7 +290,7 @@ export const getSystemSummary = async (params) => {
     return response.data.data.report;
   } catch (error)
  {
-    throw error.response.data || new Error('Failed to fetch system summary');
+    throw error.response?.data || new Error('Failed to fetch system summary');
   }
 };
 
@@ -268,7 +299,7 @@ export const settleAgentBalance = async (agentId, settlementData) => {
     const response = await apiClient.post(`/users/agents/${agentId}/settle-balance`, settlementData);
     return response.data;
   } catch (error) {
-    throw error.response.data || new Error('Failed to settle balance');
+    throw error.response?.data || new Error('Failed to settle balance');
   }
 };
 
@@ -277,7 +308,7 @@ export const getPrinters = async () => {
     const response = await apiClient.get('/printers');
     return response.data.data.printers;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch printers');
+    throw error.response?.data || new Error('Failed to fetch printers');
   }
 };
 

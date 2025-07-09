@@ -61,8 +61,8 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
     }));
 
     try {
-      const ticket = await createTicket({ lotteryId, bets: betsPayload });
-      onTicketSold(ticket); // This will clear selectedNumbers in parent, which clears local state via useEffect
+      const {ticket,transactionId,agentId} = await createTicket({ lotteryId, bets: betsPayload });
+      onTicketSold(ticket,transactionId,agentId); // This will clear selectedNumbers in parent, which clears local state via useEffect
     } catch (err) {
       setError(err.message || 'Failed to sell ticket.');
     } finally {
