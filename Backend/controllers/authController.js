@@ -2,42 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
-
-const signToken = id => {
-  // const expiry = `${process.env.JWT_EXPIRES_IN}d`;
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '90d', // Token expires in 90 days
-  });
-};
-
-const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id);
-
-  const cookieExpiresInDays = Number(process.env.JWT_COOKIE_EXPIRES_IN) || 90;
-
-  const cookieOptions = {
-    // Expiry should be a Date object
-    expires: new Date(
-      Date.now() + cookieExpiresInDays * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true, // Cannot be accessed or modified by the browser
-    secure: process.env.NODE_ENV === 'production', // Only sent on HTTPS
-    sameSite: 'lax',
-  };
-
-  res.cookie('jwt', token, cookieOptions);
-
-  // Remove password from the output
-  user.password = undefined;
-
-  res.status(statusCode).json({
-    status: 'success',
-    // The token is no longer sent in the response body
-    data: {
-      user,
-    },
-  });
-};
+const { sendTokenResponse } = require('../utils/authUtil');
 
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -57,15 +22,20 @@ exports.login = asyncHandler(async (req, res, next) => {
   }
 
   // 3) If everything is ok, send token to client
-  createSendToken(user, 200, res);
+  sendTokenResponse(user, 200, res);
 });
 
 exports.logout = (req, res) => {
   // To log out, we just send a cookie with a dummy value and a short expiry
-  res.cookie('jwt', 'loggedout', {
+  const cookieOptions = {
     expires: new Date(Date.now() + 10 * 1000), // expires in 10 seconds
     httpOnly: true,
-  });
+  };
+  if (process.env.NODE_ENV === 'production') {
+    cookieOptions.secure = true;
+    cookieOptions.sameSite = 'none';
+  }
+  res.cookie('jwt', 'loggedout', cookieOptions);
   res.status(200).json({ status: 'success' });
 };
 

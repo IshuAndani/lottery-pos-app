@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePrinter } from '../../hooks/usePrinter';
 
 const PrinterSelectionModal = ({ isOpen, onClose }) => {
   const { printers, selectedPrinter, selectPrinter } = usePrinter();
   const [currentSelection, setCurrentSelection] = useState(selectedPrinter);
+
+  // This effect syncs the modal's internal state with the global context.
+  // It runs whenever the modal is opened or the globally selected printer changes,
+  // ensuring the default selection is always reflected correctly.
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentSelection(selectedPrinter);
+    }
+  }, [isOpen, selectedPrinter]);
 
   const handleSave = () => {
     selectPrinter(currentSelection);

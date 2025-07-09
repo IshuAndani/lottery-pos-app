@@ -89,8 +89,11 @@ const ManageAgentsPage = () => {
         onSave={handleSettleBalance}
       />
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="min-w-full leading-normal">
+      {/* This container allows the table to scroll horizontally on smaller screens */}
+      {/* by changing `overflow-hidden` to `overflow-x-auto`. */}
+      <div className="bg-white shadow-md rounded-lg overflow-x-auto">
+        {/* The `min-w-full` class ensures the table tries to fit, but will scroll if it can't. */}
+        <table className="min-w-full">
           <thead>
             <tr>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
