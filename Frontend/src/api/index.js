@@ -175,12 +175,12 @@ export const createTicket = async (ticketData) => {
  * @returns {Promise<Object>} The ticket data.
  */
 export const getTicketById = async (ticketId) => {
-  try {
+  // try {
     const response = await apiClient.get(`/tickets/${ticketId}`);
     return response.data.data.ticket;
-  } catch (error) {
+  // } catch (error) {
     throw error.response?.data || new Error('Failed to fetch ticket');
-  }
+  // }
 };
 
 /**

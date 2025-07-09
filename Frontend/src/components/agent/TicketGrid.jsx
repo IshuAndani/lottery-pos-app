@@ -17,7 +17,12 @@ const TicketGrid = ({ lottery, soldNumbers, selectedNumbers, onNumberSelect }) =
   };
 
   return (
-    <div className="grid grid-cols-10 gap-2 p-4 bg-gray-100 rounded-lg">
+    // This grid is now responsive to provide a better experience on all screen sizes.
+    // - It starts with 5 columns on the smallest screens and scales up to 10 on large screens.
+    // - The gap between numbers is larger on smaller screens (`gap-4`) for better touch targets,
+    //   and slightly smaller on large screens (`lg:gap-2`) where space is less of an issue.
+    // - `max-h-[36rem]` and `overflow-y-auto` ensure the grid is vertically scrollable if it gets too tall.
+    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4 lg:gap-2 p-4 bg-gray-100 rounded-lg max-h-[36rem] overflow-y-auto">
       {numbers.map((number) => {
         const status = getNumberStatus(number);
         return (
@@ -34,5 +39,4 @@ const TicketGrid = ({ lottery, soldNumbers, selectedNumbers, onNumberSelect }) =
     </div>
   );
 };
-
 export default TicketGrid;

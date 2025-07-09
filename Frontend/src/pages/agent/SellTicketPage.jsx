@@ -47,47 +47,57 @@ const SellTicketPage = () => {
   };
 
   const handlePrintReceipt = () => {
-    const receiptNode = receiptRef.current;
-    if (!receiptNode) {
-      console.error("Receipt component is not available for printing.");
+    if (!lastSoldTicket || !lottery) {
+      console.error("Ticket or lottery data is missing for printing.");
       return;
     }
 
-    // Create a hidden iframe
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    // Copy all stylesheets from the main document to the iframe to preserve styling
-    const styleTags = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-      .map(tag => tag.outerHTML)
-      .join('');
-
-    doc.write(`
-      <html>
-        <head>
-          <title>Print Receipt</title>
-          ${styleTags}
-        </head>
-        <body>
-          ${receiptNode.innerHTML}
-        </body>
-      </html>
-    `);
-    doc.close();
-
-    // Wait for the iframe to load its content, then trigger the print dialog
-    iframe.onload = function() {
-      iframe.contentWindow.focus(); // Required for some browsers
-      iframe.contentWindow.print();
-      // Remove the iframe after a short delay to ensure the print process has started
-      setTimeout(() => document.body.removeChild(iframe), 500);
+    // This is the structured data object the native print interface will receive.
+    const printDetails = {
+      lotteryName: lottery.name,
+      createdAt: lastSoldTicket.createdAt,
+      ticketId: lastSoldTicket.ticketId,
+      bets: lastSoldTicket.bets,
+      totalAmount: lastSoldTicket.bets.reduce((sum, bet) => sum + bet.amount, 0),
+      transactionId: transactionId,
+      agentId: agentId,
     };
+
+    // Check if the native PrintInterface is available (e.g., in an Android WebView).
+    if (window.PrintInterface && typeof window.PrintInterface.print === 'function') {
+      // If it exists, send the structured data directly to the native code.
+      // The native code is now responsible for formatting and printing the receipt.
+      console.log("Using native print interface.");
+      window.PrintInterface.print(JSON.stringify(printDetails));
+    } else {
+      // --- Fallback for standard web browsers ---
+      console.log("Native print interface not found. Falling back to browser print dialog.");
+      const receiptNode = receiptRef.current;
+      if (!receiptNode) {
+        console.error("Receipt component is not available for printing for fallback.");
+        return;
+      }
+
+      // The existing iframe logic remains as a fallback for development and web-only use.
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      const styleTags = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(tag => tag.outerHTML).join('');
+      doc.write(`<html><head><title>Print Receipt</title>${styleTags}</head><body>${receiptNode.innerHTML}</body></html>`);
+      doc.close();
+
+      iframe.onload = function() {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => document.body.removeChild(iframe), 500);
+      };
+    }
   };
 
   const handleTicketSold = (ticket,transactionId,agentId) => {

@@ -5,8 +5,8 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
     name: '',
     drawDate: '',
     numberOfWinningNumbers: 1,
-    'validNumberRange.min': 0,
-    'validNumberRange.max': 99,
+    'validNumberRange.min': '0',
+    'validNumberRange.max': '99',
     payoutRule: 50,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,6 +18,15 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const min = Number(formData['validNumberRange.min']);
+    const max = Number(formData['validNumberRange.max']);
+
+    if (min >= max) {
+      setError('Minimum number must be less than the maximum number.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
     
@@ -26,10 +35,10 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
         drawDate: formData.drawDate,
         numberOfWinningNumbers: Number(formData.numberOfWinningNumbers),
         validNumberRange: {
-            min: Number(formData['validNumberRange.min']),
-            max: Number(formData['validNumberRange.max']),
+            min: min,
+            max: max,
         },
-        payoutRule: formData.payoutRule
+        payoutRule: Number(formData.payoutRule)
     };
 
     try {
@@ -50,19 +59,29 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium">Lottery Name</label>
-            <input type="text" name="name" onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <input type="text" name="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium">Draw Date & Time</label>
-            <input type="datetime-local" name="drawDate" onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <input type="datetime-local" name="drawDate" value={formData.drawDate} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium">Number of Winning Numbers</label>
-            <input type="number" name="numberOfWinningNumbers" min="1" onChange={handleChange} defaultValue="1" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <input type="number" name="numberOfWinningNumbers" min="1" value={formData.numberOfWinningNumbers} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium">Min Number</label>
+              <input type="number" name="validNumberRange.min" value={formData['validNumberRange.min']} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Max Number</label>
+              <input type="number" name="validNumberRange.max" value={formData['validNumberRange.max']} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium">"Bolet" Payout Multiplier (e.g., 50x)</label>
-            <input type="number" name="payoutRule" min="1" onChange={handleChange} defaultValue="50" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <input type="number" name="payoutRule" min="1" value={formData.payoutRule} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
           </div>
           {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
           <div className="mt-6 flex justify-end gap-4">
