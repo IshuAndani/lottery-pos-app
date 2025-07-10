@@ -13,7 +13,7 @@ const OpenLotteriesPage = () => {
         const data = await getOpenLotteries();
         setLotteries(data);
       } catch (err) {
-        setError(err.message || 'Could not fetch lotteries.');
+        setError(err);
       } finally {
         setLoading(false);
       }

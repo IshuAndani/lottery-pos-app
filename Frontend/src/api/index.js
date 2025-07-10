@@ -112,7 +112,9 @@ export const getOpenLotteries = async () => {
     console.log(response);
     return response.data.data.lotteries;
   } catch (error) {
-    throw error.response?.data || new Error('Failed to fetch open lotteries');
+    console.log(error);
+    console.log(error.message);
+    throw error.response?.data || new Error(err);
   }
 };
 
