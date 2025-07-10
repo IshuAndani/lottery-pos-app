@@ -8,12 +8,10 @@ const User = require('../models/userModel');
 exports.protect = asyncHandler(async (req, res, next) => {
   let token;
   // 1) Get token from header
-  // if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-  //   token = req.headers.authorization.split(' ')[1];
-  // }
-  if (req.cookies.jwt) {
-    token = req.cookies.jwt;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
   }
+
   if (!token) {
     return next(new ApiError(401, 'You are not logged in! Please log in to get access.'));
   }

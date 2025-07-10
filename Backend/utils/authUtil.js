@@ -16,29 +16,14 @@ const signToken = (id) => {
 exports.sendTokenResponse = (user, statusCode, res) => {
   const token = signToken(user._id);
 
-  const cookieOptions = {
-    expires: new Date(
-      Date.now() + Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true, // Prevents client-side JS from accessing the cookie
-  };
-
-  // For deployed apps, cookies MUST be secure and allow cross-site usage.
-  if (process.env.NODE_ENV === 'production') {
-    cookieOptions.secure = true; // Only send cookie over HTTPS
-    cookieOptions.sameSite = 'none'; // Allow cross-origin cookie
-  }
-
-  res.cookie('jwt', token, cookieOptions);
-
   // Remove password from the output before sending user data
   user.password = undefined;
 
   res.status(statusCode).json({
     status: 'success',
+    token, // Send the token in the response body
     data: {
       user,
     },
   });
 };
-

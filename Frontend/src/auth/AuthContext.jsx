@@ -15,11 +15,11 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = useCallback(async () => {
     setLoading(true);
     try {
-      // The httpOnly cookie is sent automatically by the browser
+      // The API call now uses the token from localStorage via an interceptor.
       const currentUser = await getCurrentUser();
       setUser(currentUser);
     } catch (error) {
-      // If this fails, it's okay. It just means the user is not logged in.
+      // This will fail if the token is invalid or not present.
       setUser(null);
     } finally {
       setLoading(false);
@@ -32,13 +32,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      // loginUser now handles storing the token in localStorage
       const data = await loginUser(email, password);
       if (data.status === 'success') {
-        // The cookie is set by the server. We just need to set the user in our state.
+        // Set the user in our state after successful login and token storage.
         setUser(data.data.user);
       }
       return data;
     } catch (error) {
+      // If login fails, ensure user state is null and token is cleared.
       setUser(null);
       throw error;
     }
@@ -46,11 +48,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await apiLogout(); // Call the API to clear the cookie on the server
+      await apiLogout(); // This now clears localStorage and can optionally hit a server endpoint.
       setUser(null); // Clear the user from our state
     } catch (error) {
       console.error('Logout failed:', error);
-      // Even if API call fails, we should log the user out on the frontend
+      // Even if the API call fails, we must ensure the user is logged out on the frontend.
+      localStorage.removeItem('token');
       setUser(null);
     }
   };

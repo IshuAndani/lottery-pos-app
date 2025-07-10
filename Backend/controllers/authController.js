@@ -26,17 +26,9 @@ exports.login = asyncHandler(async (req, res, next) => {
 });
 
 exports.logout = (req, res) => {
-  // To log out, we just send a cookie with a dummy value and a short expiry
-  const cookieOptions = {
-    expires: new Date(Date.now() + 10 * 1000), // expires in 10 seconds
-    httpOnly: true,
-  };
-  if (process.env.NODE_ENV === 'production') {
-    cookieOptions.secure = true;
-    cookieOptions.sameSite = 'none';
-  }
-  res.cookie('jwt', 'loggedout', cookieOptions);
-  res.status(200).json({ status: 'success' });
+  // With localStorage-based auth, logout is handled on the client by deleting the token.
+  // This endpoint is kept for semantics but doesn't need to do anything complex.
+  res.status(200).json({ status: 'success', message: 'Logged out successfully' });
 };
 
 // A route for the logged-in user to get their own data.
