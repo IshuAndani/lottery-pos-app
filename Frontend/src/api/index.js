@@ -107,7 +107,7 @@ export const getCurrentUser = async () => {
  */
 export const getOpenLotteries = async () => {
   // The interceptor will automatically handle errors and format them.
-  const response = await piClient.get('/lotteries?status=open');
+  const response = await apiClient.get('/lotteries?status=open');
   return response.data.data.lotteries;
 };
 
