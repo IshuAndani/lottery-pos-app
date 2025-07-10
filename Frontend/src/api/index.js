@@ -106,16 +106,9 @@ export const getCurrentUser = async () => {
  * @returns {Promise<Array>} A list of open lotteries.
  */
 export const getOpenLotteries = async () => {
-  try {
-    // The backend route GET /api/v1/lotteries?status=open handles the filtering.
-    const response = await apiClient.get('/lotteries?status=open');
-    console.log(response);
-    return response.data.data.lotteries;
-  } catch (error) {
-    console.log(error);
-    console.log(error.message);
-    throw error.response?.data || new Error(err);
-  }
+  // The interceptor will automatically handle errors and format them.
+  const response = await piClient.get('/lotteries?status=open');
+  return response.data.data.lotteries;
 };
 
 /**

@@ -22,7 +22,16 @@ const OpenLotteriesPage = () => {
   }, []);
 
   if (loading) return <p>Loading lotteries...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  if (error) {
+    return (
+      <div className="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+        <span className="font-medium">Error!</span> Failed to load lotteries.
+        <pre className="mt-2 font-mono text-xs whitespace-pre-wrap">
+          {error.message}
+        </pre>
+      </div>
+    );
+  }
 
   return (
     <div>
