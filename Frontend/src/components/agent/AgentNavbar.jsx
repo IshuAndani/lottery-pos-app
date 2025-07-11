@@ -60,7 +60,7 @@ const AgentNavbar = () => {
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
-                {isProfileMenuOpen && (
+                {/* {isProfileMenuOpen && (
                   <div className="origin-top-right absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-10">
                     <button
                       onClick={handleLogout}
@@ -72,7 +72,7 @@ const AgentNavbar = () => {
                       <span>Logout</span>
                     </button>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
             {/* Hamburger Menu Button */}
@@ -111,7 +111,7 @@ const AgentNavbar = () => {
               </div>
               <div className="mt-3 px-2 space-y-1">
                 <button onClick={() => { setIsPrinterModalOpen(true); setIsMobileMenuOpen(false); }} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-700">Printer: {selectedPrinter ? selectedPrinter.name : 'None'}</button>
-                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-blue-200 hover:text-white hover:bg-blue-700">Logout</button>
+                {/* <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-blue-200 hover:text-white hover:bg-blue-700">Logout</button> */}
               </div>
             </div>
           </div>
