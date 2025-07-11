@@ -57,7 +57,11 @@ const AgentReportsPage = () => {
           <input type="date" name="endDate" value={dates.endDate} onChange={handleDateChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
         </div>
         <button type="submit" className="bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">Filter</button>
-        <button type="button" onClick={handleClearFilter} className="bg-gray-500 text-white font-bold py-2 px-4 rounded hover:bg-gray-600">Clear</button>
+        <button type="button" onClick={handleClearFilter} className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600" aria-label="Clear filter">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
       </form>
 
       {/* Report Display */}

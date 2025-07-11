@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { getLotteryById, getSoldNumbersForLottery } from '../../api';
 import TicketGrid from '../../components/agent/TicketGrid';
 import BettingSlip from '../../components/agent/BettingSlip';
@@ -105,7 +106,7 @@ const SellTicketPage = () => {
     const newlySold = ticket.bets.map(b => b.number);
     setSoldNumbers(prev => [...prev, ...newlySold]);
     setSelectedNumbers([]); // Clear selection
-    alert(`Ticket sold successfully! Ticket ID: ${ticket.ticketId}.`);
+    toast.success(`Ticket sold successfully! Ticket ID: ${ticket.ticketId}`);
     // This state update will trigger the useEffect below to print the receipt
     setLastSoldTicket(ticket);
     setTransactionId(transactionId);
@@ -115,9 +116,15 @@ const SellTicketPage = () => {
   // This effect runs *after* the component re-renders with the new `lastSoldTicket`
   useEffect(() => {
     if (lastSoldTicket) {
-      // We check for lastSoldTicket to ensure this runs only after a sale.
-      // The receiptRef will be available because the component has just re-rendered.
-      handlePrintReceipt();
+      // Delay the print action slightly. This ensures the user has a moment
+      // to see the "Ticket Sold" toast notification before the browser's
+      // print dialog appears and blocks the UI.
+      const printTimer = setTimeout(() => {
+        handlePrintReceipt();
+      }, 1000); // 1-second delay
+
+      // Clean up the timer if the component unmounts before it fires
+      return () => clearTimeout(printTimer);
     }
   }, [lastSoldTicket]); // Dependency array ensures this runs only when a new ticket is sold
 

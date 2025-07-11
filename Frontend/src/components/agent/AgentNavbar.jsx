@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { usePrinter } from '../../hooks/usePrinter'; // Import the new hook
 import PrinterSelectionModal from './PrinterSelectionModal'; // Import the new modal
@@ -7,15 +7,28 @@ import PrinterSelectionModal from './PrinterSelectionModal'; // Import the new m
 const AgentNavbar = () => {
   const { user, logout } = useAuth();
   const { selectedPrinter } = usePrinter();
-  const navigate = useNavigate();
   const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
 
   // The logout function from the auth context will handle clearing state.
-  // The routing logic should then handle redirecting the user to the login page.
   const handleLogout = () => {
     logout();
   };
+
+  // Effect to close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const activeLinkStyle = { color: 'white', backgroundColor: '#1D4ED8' };
 
@@ -37,12 +50,29 @@ const AgentNavbar = () => {
               </div>
             </div>
             <div className="hidden md:block">
-              <div className="ml-4 flex items-center md:ml-6">
+              <div className="ml-4 flex items-center md:ml-6 relative" ref={profileMenuRef}>
                 <button onClick={() => setIsPrinterModalOpen(true)} className="text-sm mr-4 p-2 rounded-md hover:bg-blue-700">
                   Printer: {selectedPrinter ? selectedPrinter.name : 'None'}
                 </button>
-                <span className="mr-3">Welcome, {user?.name}</span>
-                <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
+                <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex items-center text-white hover:text-blue-200 focus:outline-none">
+                  <span>Welcome, {user?.name}</span>
+                  <svg className="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                {isProfileMenuOpen && (
+                  <div className="origin-top-right absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             {/* Hamburger Menu Button */}
@@ -81,7 +111,7 @@ const AgentNavbar = () => {
               </div>
               <div className="mt-3 px-2 space-y-1">
                 <button onClick={() => { setIsPrinterModalOpen(true); setIsMobileMenuOpen(false); }} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-700">Printer: {selectedPrinter ? selectedPrinter.name : 'None'}</button>
-                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-700">Logout</button>
+                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-blue-200 hover:text-white hover:bg-blue-700">Logout</button>
               </div>
             </div>
           </div>

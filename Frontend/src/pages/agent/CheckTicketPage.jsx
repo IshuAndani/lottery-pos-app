@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getTicketById } from '../../api';
+import { toast } from 'react-hot-toast';
 import TicketResult from '../../components/agent/TicketResult';
 
 const CheckTicketPage = () => {
@@ -29,7 +30,7 @@ const CheckTicketPage = () => {
   const handlePayoutSuccess = (updatedTicket) => {
     // When the child component successfully pays out, update the ticket data here
     setSearchedTicket(updatedTicket);
-    alert('Payout successful!');
+    toast.success('Payout successful!');
   };
 
   return (
@@ -58,7 +59,14 @@ const CheckTicketPage = () => {
         </div>
       </form>
       
-      {error && <p className="text-red-500 mt-4">{error}</p>}
+      {error && (
+        <div className="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+          <span className="font-medium">Search Failed!</span>
+          <p className="mt-1">
+            {error}
+          </p>
+        </div>
+      )}
       
       {searchedTicket && <TicketResult ticket={searchedTicket} onPayoutSuccess={handlePayoutSuccess} />}
     </div>
