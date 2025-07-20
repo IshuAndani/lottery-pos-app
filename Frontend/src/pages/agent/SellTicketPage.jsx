@@ -121,13 +121,13 @@ const SellTicketPage = () => {
                 >
                   {copied ? 'Copié !' : 'Copier l\'ID du billet'}
                 </button>
-                <button
+                {/* <button
                   onClick={() => setShowSuccess(false)}
                   className="text-gray-600 underline mt-2 flex items-center gap-1 px-4 py-2 rounded hover:bg-gray-100"
                   aria-label="Fermer"
-                >
-                  <span>Fermer</span>
-                </button>
+                > */}
+                  {/* <span>Fermer</span> */}
+                {/* </button> */}
               </div>
             )}
             {/* Receipt Printout (unchanged) */}
