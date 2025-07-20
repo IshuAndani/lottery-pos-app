@@ -18,7 +18,7 @@ const app = express();
 
 // --- Global Middlewares ---
 app.use(cors({
-  origin: 'http://localhost:5173', // The URL of your React app
+  origin: '*', // The URL of your React app
   credentials: true                // This allows cookies to be sent and received
 }));
 app.use(helmet());
