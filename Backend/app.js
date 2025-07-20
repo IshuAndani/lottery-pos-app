@@ -17,9 +17,10 @@ const printerRouter = require('./routes/printerRoutes');
 const app = express();
 
 // --- Global Middlewares ---
+// Allow for all origins for CORS
 app.use(cors({
-  origin: '*', // The URL of your React app
-  credentials: true                // This allows cookies to be sent and received
+  origin: ['http://localhost:5173', 'https://dist-lake-theta.vercel.app'], // Replace with your frontend URL (e.g., React app)
+  credentials: true, // Allow cookies/auth headers
 }));
 app.use(helmet());
 app.use(express.json({ limit: '10kb' }));
