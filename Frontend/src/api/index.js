@@ -7,7 +7,8 @@ import axios from 'axios';
 const apiClient = axios.create({
   // Set the base URL for all API requests to your backend server.
   // Make sure your backend is running on this address.
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lottery-pos-app-bel1.onrender.com/api/v1',
+  // baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
   
   // This is CRUCIAL for cookie-based authentication.
   // It tells Axios to send cookies received from the backend
@@ -29,7 +30,8 @@ const apiClient = axios.create({
  */
 export const loginUser = async (email, password) => {
   try {
-    const response = await apiClient.post('/users/login', { email, password });
+    console.log("Logging in..."); // Debugging statement
+    const response = await apiClient.post("/users/login", { email, password });
     return response.data;
   } catch (error) {
     // Axios wraps the error from the server in error.response.

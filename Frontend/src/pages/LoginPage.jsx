@@ -15,6 +15,7 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     try {
+      console.log('Attempting to log in with:', { email, password });
       const response = await login(email, password);
       // On success, navigate to the correct dashboard based on role
       if (response.data.user.role === 'admin') {

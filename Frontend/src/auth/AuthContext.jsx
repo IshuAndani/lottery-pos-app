@@ -32,7 +32,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('Attempting to log in with:', { email, password });
       const data = await loginUser(email, password);
+      console.log('Login response:', data);
       if (data.status === 'success') {
         // The cookie is set by the server. We just need to set the user in our state.
         setUser(data.data.user);
