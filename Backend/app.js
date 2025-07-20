@@ -19,7 +19,7 @@ const app = express();
 // --- Global Middlewares ---
 // Allow for all origins for CORS
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://dist-lake-theta.vercel.app','https://lottery-pos-app-1.onrender.com/'], // Replace with your frontend URL (e.g., React app)
+  origin: ['http://localhost:5173', 'https://dist-lake-theta.vercel.app','https://lottery-pos-app-1.onrender.com'],
   credentials: true, // Allow cookies/auth headers
 }));
 app.use(helmet());
