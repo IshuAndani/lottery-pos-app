@@ -13,8 +13,20 @@ const apiClient = axios.create({
   // This is CRUCIAL for cookie-based authentication.
   // It tells Axios to send cookies received from the backend
   // back to the backend on subsequent requests.
-  withCredentials: true,
+  // Removed withCredentials: true, since we are not using cookies anymore
 });
+
+// Add a request interceptor to attach the JWT token from localStorage
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('jwt');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 /**
  * =================================================================
@@ -32,6 +44,10 @@ export const loginUser = async (email, password) => {
   try {
     console.log("Logging in..."); // Debugging statement
     const response = await apiClient.post("/users/login", { email, password });
+    // Store the token in localStorage
+    if (response.data.token) {
+      localStorage.setItem('jwt', response.data.token);
+    }
     return response.data;
   } catch (error) {
     // Axios wraps the error from the server in error.response.
@@ -42,9 +58,11 @@ export const loginUser = async (email, password) => {
 
 export const logoutUser = async () => {
   try {
-    // The backend route is GET /api/v1/users/logout
-    const response = await apiClient.get('/users/logout');
-    return response.data;
+    // Just remove the token from localStorage
+    localStorage.removeItem('jwt');
+    // Optionally, you can call a backend endpoint if you want to invalidate the token server-side
+    // await apiClient.get('/users/logout');
+    return { status: 'success' };
   } catch (error) {
     throw error.response?.data || new Error('Logout failed');
   }

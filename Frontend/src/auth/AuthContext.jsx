@@ -15,11 +15,16 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = useCallback(async () => {
     setLoading(true);
     try {
-      // The httpOnly cookie is sent automatically by the browser
+      // Check if token exists in localStorage
+      const token = localStorage.getItem('jwt');
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
       const currentUser = await getCurrentUser();
       setUser(currentUser);
     } catch (error) {
-      // If this fails, it's okay. It just means the user is not logged in.
       setUser(null);
     } finally {
       setLoading(false);
@@ -36,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       const data = await loginUser(email, password);
       console.log('Login response:', data);
       if (data.status === 'success') {
-        // The cookie is set by the server. We just need to set the user in our state.
+        // Store token in localStorage (already done in loginUser)
         setUser(data.data.user);
       }
       return data;
@@ -48,11 +53,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await apiLogout(); // Call the API to clear the cookie on the server
+      await apiLogout(); // Removes token from localStorage
       setUser(null); // Clear the user from our state
     } catch (error) {
       console.error('Logout failed:', error);
-      // Even if API call fails, we should log the user out on the frontend
       setUser(null);
     }
   };

@@ -13,26 +13,12 @@ const signToken = id => {
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
-  const cookieExpiresInDays = Number(process.env.JWT_EXPIRES_IN) || 90;
-
-  const cookieOptions = {
-    // Expiry should be a Date object
-    expires: new Date(
-      Date.now() + cookieExpiresInDays * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true, // Cannot be accessed or modified by the browser
-    secure: process.env.NODE_ENV === 'production', // Only sent on HTTPS
-    sameSite: 'lax',
-  };
-
-  res.cookie('jwt', token, cookieOptions);
-
   // Remove password from the output
   user.password = undefined;
 
   res.status(statusCode).json({
     status: 'success',
-    // The token is no longer sent in the response body
+    token, // Send token in response body
     data: {
       user,
     },
@@ -61,11 +47,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 });
 
 exports.logout = (req, res) => {
-  // To log out, we just send a cookie with a dummy value and a short expiry
-  res.cookie('jwt', 'loggedout', {
-    expires: new Date(Date.now() + 10 * 1000), // expires in 10 seconds
-    httpOnly: true,
-  });
+  // No cookie to clear, just return success
   res.status(200).json({ status: 'success' });
 };
 

@@ -20,12 +20,13 @@ const app = express();
 // Allow for all origins for CORS
 app.use(cors({
   origin: ['http://localhost:5173', 'https://dist-lake-theta.vercel.app','https://lottery-pos-app-1.onrender.com'],
-  credentials: true, // Allow cookies/auth headers
+  // credentials: true, // Remove this, since we are not using cookies
 }));
 app.use(helmet());
 app.use(express.json({ limit: '10kb' }));
 app.use(mongoSanitize());
-app.use(cookieParser());
+// Remove cookieParser middleware
+// app.use(cookieParser());
 
 // --- Routes ---
 
