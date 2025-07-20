@@ -17,7 +17,7 @@ const TicketGrid = ({ lottery, soldNumbers, selectedNumbers, onNumberSelect }) =
   };
 
   return (
-    <div className="grid grid-cols-10 gap-2 p-4 bg-gray-100 rounded-lg">
+    <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 p-2 sm:p-4 bg-gray-100 rounded-lg">
       {numbers.map((number) => {
         const status = getNumberStatus(number);
         return (
@@ -25,7 +25,7 @@ const TicketGrid = ({ lottery, soldNumbers, selectedNumbers, onNumberSelect }) =
             key={number}
             onClick={() => onNumberSelect(number)}
             disabled={status === 'sold'}
-            className={`flex items-center justify-center h-12 w-12 rounded-lg border font-bold text-lg transition-colors ${statusStyles[status]}`}
+            className={`flex items-center justify-center h-10 sm:h-12 w-10 sm:w-12 rounded-lg border font-bold text-lg transition-colors ${statusStyles[status]}`}
           >
             {number}
           </button>

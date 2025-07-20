@@ -9,9 +9,9 @@ const ReportCard = ({ title, value, color = 'blue' }) => {
   };
 
   return (
-    <div className={`p-6 rounded-lg shadow-md ${colorClasses[color]}`}>
-      <h3 className="text-sm font-medium uppercase tracking-wider">{title}</h3>
-      <p className="mt-2 text-3xl font-bold">
+    <div className={`w-full p-4 sm:p-6 rounded-lg shadow-md ${colorClasses[color]}`}>
+      <h3 className="text-xs sm:text-sm font-medium uppercase tracking-wider">{title}</h3>
+      <p className="mt-2 text-2xl sm:text-3xl font-bold">
         {typeof value === 'number' ? `$${value.toFixed(2)}` : value}
       </p>
     </div>

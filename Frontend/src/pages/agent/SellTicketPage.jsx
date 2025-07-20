@@ -99,13 +99,13 @@ const SellTicketPage = () => {
   if (!lottery) return <p>Lottery not found.</p>;
 
   return (
-    <div>
+    <div className="px-2 sm:px-4 py-2">
       {showReceipt && lastSoldTicket && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-          <div className="relative bg-white rounded-lg shadow-lg p-0">
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center px-2">
+          <div className="relative bg-white rounded-lg shadow-lg p-0 w-full max-w-md mx-auto">
             {/* Success Popup */}
             {showSuccess && (
-              <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center bg-white bg-opacity-95 z-10 rounded-lg p-8" style={{ minHeight: '260px', minWidth: '340px' }}>
+              <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center bg-white bg-opacity-95 z-10 rounded-lg p-4 sm:p-8" style={{ minHeight: '260px', minWidth: '240px' }}>
                 <button
                   className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl font-bold"
                   onClick={() => { setShowSuccess(false); setShowReceipt(false); }}
@@ -113,8 +113,8 @@ const SellTicketPage = () => {
                 >
                   ×
                 </button>
-                <div className="text-green-600 text-2xl font-bold mb-2">Ticket créé avec succès !</div>
-                <div className="mb-4 text-gray-700">ID du billet : <span className="font-mono bg-gray-100 px-2 py-1 rounded">{lastSoldTicket.ticketId}</span></div>
+                <div className="text-green-600 text-xl sm:text-2xl font-bold mb-2">Ticket créé avec succès !</div>
+                <div className="mb-4 text-gray-700 text-sm sm:text-base">ID du billet : <span className="font-mono bg-gray-100 px-2 py-1 rounded">{lastSoldTicket.ticketId}</span></div>
                 <button
                   onClick={handleCopy}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold mb-2"
@@ -137,21 +137,21 @@ const SellTicketPage = () => {
       )}
       {/* State and Period Selection */}
       <div className="mb-6 flex flex-col md:flex-row gap-4 items-center">
-        <div>
+        <div className="w-full max-w-xs">
           <label className="block text-sm font-medium text-gray-700 mb-1">État (State)</label>
           <select
             value={selectedState}
             onChange={e => setSelectedState(e.target.value)}
-            className="block w-48 rounded-md border-gray-300 shadow-sm"
+            className="block w-full rounded-md border-gray-300 shadow-sm"
           >
             {allLotteries.map(l => (
               <option key={l._id} value={l._id}>{l.name}</option>
             ))}
           </select>
         </div>
-        <div>
+        <div className="w-full max-w-xs">
           <label className="block text-sm font-medium text-gray-700 mb-1">Période (Period)</label>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             {PERIODS.map(period => (
               <label key={period.value} className="flex items-center gap-2">
                 <input
@@ -168,9 +168,8 @@ const SellTicketPage = () => {
           </div>
         </div>
       </div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">{lottery.name}</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{lottery.name}</h1>
       <p className="text-gray-600 mb-6">Select numbers from the grid to sell a ticket.</p>
-      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <TicketGrid

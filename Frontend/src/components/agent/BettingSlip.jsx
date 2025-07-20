@@ -110,9 +110,9 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
   const isSellDisabled = isSubmitting || totalAmount === 0 || (betType === 'bolet' && Object.values(bets).some(amount => Number(amount) > 0 && Number(amount) < 1));
 
   return (
-    <div className="p-4 bg-gray-100 rounded-lg shadow-md">
+    <div className="p-2 sm:p-4 bg-gray-100 rounded-lg shadow-md w-full">
       <h3 className="font-bold text-lg mb-4">Bulletin de pari</h3>
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex gap-4 flex-col sm:flex-row">
         <label>
           <input type="radio" name="betType" value="bolet" checked={betType === 'bolet'} onChange={() => setBetType('bolet')} /> Bolet
         </label>
@@ -127,7 +127,7 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
           <>
             <div className="space-y-3">
               {selectedNumbers.map(number => (
-                <div key={number} className="flex items-center justify-between">
+                <div key={number} className="flex flex-col sm:flex-row items-center justify-between gap-2">
                   <span className="font-bold text-xl text-blue-600 w-12">{number}</span>
                   <input
                     type="number"
@@ -136,7 +136,7 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
                     placeholder="Montant du pari"
                     value={bets[number] || ''}
                     onChange={(e) => handleAmountChange(number, e.target.value)}
-                    className="w-32 px-2 py-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full sm:w-32 px-2 py-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               ))}
@@ -145,14 +145,14 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
         )
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2">
             <input
               type="text"
               maxLength={2}
               placeholder="Numéro 1"
               value={mariageNumbers[0]}
               onChange={e => handleMariageNumberChange(0, e.target.value)}
-              className="w-16 px-2 py-1 border rounded-md shadow-sm"
+              className="w-full sm:w-16 px-2 py-1 border rounded-md shadow-sm"
             />
             <span className="font-bold text-xl">x</span>
             <input
@@ -161,7 +161,7 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
               placeholder="Numéro 2"
               value={mariageNumbers[1]}
               onChange={e => handleMariageNumberChange(1, e.target.value)}
-              className="w-16 px-2 py-1 border rounded-md shadow-sm"
+              className="w-full sm:w-16 px-2 py-1 border rounded-md shadow-sm"
             />
             <input
               type="number"
@@ -170,18 +170,18 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
               placeholder="Montant du pari"
               value={bets.mariage || ''}
               onChange={e => handleMariageAmountChange(e.target.value)}
-              className="w-32 px-2 py-1 border rounded-md shadow-sm"
+              className="w-full sm:w-32 px-2 py-1 border rounded-md shadow-sm"
             />
           </div>
         </div>
       )}
       <hr className="my-4" />
-      <div className="flex justify-between font-bold text-xl">
+      <div className="flex flex-col sm:flex-row justify-between font-bold text-xl gap-2">
         <span>Total:</span>
         <span>${totalAmount.toFixed(2)}</span>
       </div>
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-      <div className="flex gap-2 mt-4">
+      <div className="flex flex-col sm:flex-row gap-2 mt-4">
         <button
           onClick={handleSubmit}
           disabled={isSellDisabled}
