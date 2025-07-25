@@ -6,9 +6,8 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [betType, setBetType] = useState('bolet');
-  const [mariageNumbers, setMariageNumbers] = useState(['', '']);
 
-  // Effect to synchronize the local 'bets' state with the 'selectedNumbers' prop.
+  // Effect to synchronize the local 'bets' state with the 'selectedNumbers' prop for bolet
   useEffect(() => {
     if (betType === 'bolet') {
       const newBets = selectedNumbers.reduce((acc, number) => {
@@ -16,6 +15,9 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
         return acc;
       }, {});
       setBets(newBets);
+    } else if (betType === 'mariage') {
+      // Initialize single amount for mariage bet
+      setBets({ mariage: bets.mariage || '' });
     }
   }, [selectedNumbers, betType]);
 
@@ -30,16 +32,15 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
     }
   };
 
-  const handleMariageNumberChange = (idx, value) => {
-    setMariageNumbers(prev => {
-      const arr = [...prev];
-      arr[idx] = value;
-      return arr;
-    });
-  };
-
   const handleMariageAmountChange = (value) => {
-    setBets({ mariage: value });
+    if (value === '') {
+      setBets({ mariage: '' });
+      return;
+    }
+    const newAmount = Number(value);
+    if (!isNaN(newAmount) && newAmount >= 0) {
+      setBets({ mariage: newAmount });
+    }
   };
 
   const totalAmount = useMemo(() => {
@@ -70,20 +71,17 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
         betType: 'bolet'
       }));
     } else if (betType === 'mariage') {
-      if (!mariageNumbers[0] || !mariageNumbers[1]) {
-        setError('Please enter two numbers for mariage.');
-        return;
-      }
-      if (mariageNumbers[0] === mariageNumbers[1]) {
-        setError('The two numbers must be different for mariage.');
+      if (selectedNumbers.length < 2) {
+        setError('Please select at least two numbers for mariage.');
         return;
       }
       if (!bets.mariage || Number(bets.mariage) < 1) {
         setError('The minimum bet for mariage is $1.00.');
         return;
       }
+      // All selected numbers form one mariage combination
       betsPayload = [{
-        numbers: [mariageNumbers[0], mariageNumbers[1]],
+        numbers: [...selectedNumbers],
         amount: Number(bets.mariage),
         betType: 'mariage'
       }];
@@ -103,11 +101,12 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
   const handleClear = () => {
     setBets({});
     setError('');
-    setMariageNumbers(['', '']);
     onClearSelection();
   };
 
-  const isSellDisabled = isSubmitting || totalAmount === 0 || (betType === 'bolet' && Object.values(bets).some(amount => Number(amount) > 0 && Number(amount) < 1));
+  const isSellDisabled = isSubmitting || totalAmount === 0 || 
+    (betType === 'bolet' && Object.values(bets).some(amount => Number(amount) > 0 && Number(amount) < 1)) ||
+    (betType === 'mariage' && (!bets.mariage || Number(bets.mariage) < 1));
 
   return (
     <div className="p-2 sm:p-4 bg-gray-100 rounded-lg shadow-md w-full">
@@ -124,56 +123,42 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
         selectedNumbers.length === 0 ? (
           <p className="text-gray-500">Sélectionnez des numéros dans la grille pour parier.</p>
         ) : (
-          <>
-            <div className="space-y-3">
-              {selectedNumbers.map(number => (
-                <div key={number} className="flex flex-col sm:flex-row items-center justify-between gap-2">
-                  <span className="font-bold text-xl text-blue-600 w-12">{number}</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="Montant du pari"
-                    value={bets[number] || ''}
-                    onChange={(e) => handleAmountChange(number, e.target.value)}
-                    className="w-full sm:w-32 px-2 py-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              ))}
-            </div>
-          </>
+          <div className="space-y-3">
+            {selectedNumbers.map(number => (
+              <div key={number} className="flex flex-col sm:flex-row items-center justify-between gap-2">
+                <span className="font-bold text-xl text-blue-600 w-12">{number}</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="Montant du pari"
+                  value={bets[number] || ''}
+                  onChange={(e) => handleAmountChange(number, e.target.value)}
+                  className="w-full sm:w-32 px-2 py-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            ))}
+          </div>
         )
       ) : (
-        <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row items-center gap-2">
-            <input
-              type="text"
-              maxLength={2}
-              placeholder="Numéro 1"
-              value={mariageNumbers[0]}
-              onChange={e => handleMariageNumberChange(0, e.target.value)}
-              className="w-full sm:w-16 px-2 py-1 border rounded-md shadow-sm"
-            />
-            <span className="font-bold text-xl">x</span>
-            <input
-              type="text"
-              maxLength={2}
-              placeholder="Numéro 2"
-              value={mariageNumbers[1]}
-              onChange={e => handleMariageNumberChange(1, e.target.value)}
-              className="w-full sm:w-16 px-2 py-1 border rounded-md shadow-sm"
-            />
-            <input
-              type="number"
-              min="1"
-              step="1"
-              placeholder="Montant du pari"
-              value={bets.mariage || ''}
-              onChange={e => handleMariageAmountChange(e.target.value)}
-              className="w-full sm:w-32 px-2 py-1 border rounded-md shadow-sm"
-            />
+        selectedNumbers.length === 0 ? (
+          <p className="text-gray-500">Sélectionnez des numéros dans la grille pour parier.</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-gray-700">Numéros sélectionnés: {selectedNumbers.join(', ')}</p>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Montant pour le mariage"
+                value={bets.mariage || ''}
+                onChange={e => handleMariageAmountChange(e.target.value)}
+                className="w-full sm:w-32 px-2 py-1 border rounded-md shadow-md focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
           </div>
-        </div>
+        )
       )}
       <hr className="my-4" />
       <div className="flex flex-col sm:flex-row justify-between font-bold text-xl gap-2">
@@ -181,17 +166,17 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
         <span>${totalAmount.toFixed(2)}</span>
       </div>
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-      <div className="flex flex-col sm:flex-row gap-2 mt-4">
+      <div className="flex flex-row gap-2 mt-4">
         <button
           onClick={handleSubmit}
           disabled={isSellDisabled}
-          className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 disabled:bg-gray-400 transition-colors"
+          className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 disabled:bg-gray-400 transition-colors text-sm sm:text-base"
         >
           {isSubmitting ? 'Vente en cours...' : 'Vendre le billet'}
         </button>
         <button
           onClick={handleClear}
-          className="bg-gray-500 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-600 transition-colors"
+          className="flex-none bg-gray-500 text-white font-bold py-1 px-2 rounded-md hover:bg-gray-600 transition-colors text-xs sm:text-sm"
         >
           Effacer
         </button>

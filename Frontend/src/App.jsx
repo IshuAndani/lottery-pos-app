@@ -17,11 +17,13 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageAgentsPage from './pages/admin/ManageAgentsPage';
 import ManageLotteriesPage from './pages/admin/ManageLotteriesPage';
 import AdminReportsPage from './pages/admin/AdminReportsPage'; // Import the new page
+import { IntlProvider } from 'react-intl';
 
 function App() {
   return (
-    <Routes>
-      {/* Public Route */}
+    <IntlProvider locale="en">
+      <Routes>
+        {/* Public Route */}
       <Route path="/login" element={<LoginPage />} />
 
       {/* Agent Protected Routes */}
@@ -48,6 +50,7 @@ function App() {
       {/* Fallback for any other URL */}
       <Route path="*" element={<h1>404 Not Found</h1>} />
     </Routes>
+    </IntlProvider>
   );
 }
 

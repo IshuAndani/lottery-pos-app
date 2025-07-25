@@ -16,17 +16,41 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     throw new ApiError(400, 'This lottery is not open for ticket sales.');
   }
 
-  // --- New logic: Check max per number ---
-  // 1. Build a map of numbers to amounts being bet in this sale
+  // Validate bets
+  for (const bet of bets) {
+    if (!['bolet', 'mariage'].includes(bet.betType)) {
+      throw new ApiError(400, `Invalid bet type: ${bet.betType}. Must be 'bolet' or 'mariage'.`);
+    }
+    if (!Array.isArray(bet.numbers) || bet.numbers.length === 0) {
+      throw new ApiError(400, `Bet must include a numbers array.`);
+    }
+    if (bet.betType === 'bolet' && bet.numbers.length !== 1) {
+      throw new ApiError(400, `Bolet bets must have exactly one number per bet.`);
+    }
+    if (bet.betType === 'mariage' && bet.numbers.length < 2) {
+      throw new ApiError(400, `Mariage bets must have at least two numbers.`);
+    }
+    if (bet.numbers.some(num => typeof num !== 'string' || !num)) {
+      throw new ApiError(400, `All numbers must be non-empty strings.`);
+    }
+    const uniqueNumbers = new Set(bet.numbers);
+    if (uniqueNumbers.size !== bet.numbers.length) {
+      throw new ApiError(400, `Duplicate numbers are not allowed in a single bet.`);
+    }
+    if (isNaN(bet.amount) || bet.amount <= 0) {
+      throw new ApiError(400, `Bet amount must be a positive number.`);
+    }
+  }
+
+  // Check max per number
   const betAmounts = {};
   for (const bet of bets) {
-    for (const num of (bet.numbers || [])) {
+    for (const num of bet.numbers) {
       betAmounts[num] = (betAmounts[num] || 0) + bet.amount;
     }
   }
-  // 2. Get all tickets for this lottery
+
   const tickets = await Ticket.find({ lottery: lotteryId });
-  // 3. Build a map of numbers to total amount already sold
   const soldTotals = {};
   for (const ticket of tickets) {
     for (const bet of ticket.bets) {
@@ -39,7 +63,7 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
       }
     }
   }
-  // 4. Check if any number would exceed the max
+
   const maxPerNumber = lottery.maxPerNumber || 50;
   for (const num in betAmounts) {
     const alreadySold = soldTotals[num] || 0;
@@ -55,7 +79,7 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
 
   let newTicket;
   try {
-    // 1. Create ticket
+    // Create ticket
     newTicket = await Ticket.create({
       ticketId: generateTicketId(),
       lottery: lotteryId,
@@ -64,7 +88,7 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
       totalAmount,
     });
 
-    // 2. Create commission transaction
+    // Create commission transaction
     await Transaction.create({
       agent: agentId,
       ticket: newTicket._id,
@@ -74,11 +98,11 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
       relatedLottery: lotteryId,
     });
 
-    // 3. Update agent balance
+    // Update agent balance
     agent.balance += netOwedToAdmin;
     await agent.save();
 
-    // 4. Update lottery
+    // Update lottery
     lottery.ticketsSold += 1;
     await lottery.save();
   } catch (error) {

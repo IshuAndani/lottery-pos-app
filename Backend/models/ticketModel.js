@@ -2,9 +2,8 @@ const mongoose = require('mongoose');
 
 const betSchema = new mongoose.Schema({
   numbers: {
-    type: [String], // For mariage: ["12", "56"], for bolet: ["12"]
+    type: [String], 
     required: true,
-    validate: v => Array.isArray(v) && v.length > 0 && v.length <= 2
   },
   amount: {
     type: Number,
