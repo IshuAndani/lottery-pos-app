@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getLotteryById, getSoldNumbersForLottery, getOpenLotteries } from '../../api';
+import { getLotteryById, getOpenLotteries } from '../../api';
 import TicketGrid from '../../components/agent/TicketGrid';
 import BettingSlip from '../../components/agent/BettingSlip';
 import TicketReceipt from '../../components/agent/TicketResult';
@@ -12,70 +12,15 @@ const PERIODS = [
   { value: 'soir', label: 'Soir' },
 ];
 
-const US_STATES = [
-  { name: 'Alabama', abbreviation: 'AL' },
-  { name: 'Alaska', abbreviation: 'AK' },
-  { name: 'Arizona', abbreviation: 'AZ' },
-  { name: 'Arkansas', abbreviation: 'AR' },
-  { name: 'California', abbreviation: 'CA' },
-  { name: 'Colorado', abbreviation: 'CO' },
-  { name: 'Connecticut', abbreviation: 'CT' },
-  { name: 'Delaware', abbreviation: 'DE' },
-  { name: 'Florida', abbreviation: 'FL' },
-  { name: 'Georgia', abbreviation: 'GA' },
-  { name: 'Hawaii', abbreviation: 'HI' },
-  { name: 'Idaho', abbreviation: 'ID' },
-  { name: 'Illinois', abbreviation: 'IL' },
-  { name: 'Indiana', abbreviation: 'IN' },
-  { name: 'Iowa', abbreviation: 'IA' },
-  { name: 'Kansas', abbreviation: 'KS' },
-  { name: 'Kentucky', abbreviation: 'KY' },
-  { name: 'Louisiana', abbreviation: 'LA' },
-  { name: 'Maine', abbreviation: 'ME' },
-  { name: 'Maryland', abbreviation: 'MD' },
-  { name: 'Massachusetts', abbreviation: 'MA' },
-  { name: 'Michigan', abbreviation: 'MI' },
-  { name: 'Minnesota', abbreviation: 'MN' },
-  { name: 'Mississippi', abbreviation: 'MS' },
-  { name: 'Missouri', abbreviation: 'MO' },
-  { name: 'Montana', abbreviation: 'MT' },
-  { name: 'Nebraska', abbreviation: 'NE' },
-  { name: 'Nevada', abbreviation: 'NV' },
-  { name: 'New Hampshire', abbreviation: 'NH' },
-  { name: 'New Jersey', abbreviation: 'NJ' },
-  { name: 'New Mexico', abbreviation: 'NM' },
-  { name: 'New York', abbreviation: 'NY' },
-  { name: 'North Carolina', abbreviation: 'NC' },
-  { name: 'North Dakota', abbreviation: 'ND' },
-  { name: 'Ohio', abbreviation: 'OH' },
-  { name: 'Oklahoma', abbreviation: 'OK' },
-  { name: 'Oregon', abbreviation: 'OR' },
-  { name: 'Pennsylvania', abbreviation: 'PA' },
-  { name: 'Rhode Island', abbreviation: 'RI' },
-  { name: 'South Carolina', abbreviation: 'SC' },
-  { name: 'South Dakota', abbreviation: 'SD' },
-  { name: 'Tennessee', abbreviation: 'TN' },
-  { name: 'Texas', abbreviation: 'TX' },
-  { name: 'Utah', abbreviation: 'UT' },
-  { name: 'Vermont', abbreviation: 'VT' },
-  { name: 'Virginia', abbreviation: 'VA' },
-  { name: 'Washington', abbreviation: 'WA' },
-  { name: 'West Virginia', abbreviation: 'WV' },
-  { name: 'Wisconsin', abbreviation: 'WI' },
-  { name: 'Wyoming', abbreviation: 'WY' },
-  { name: 'Washington, D.C.', abbreviation: 'DC' },
-];
-
 const SellTicketPage = () => {
   const { lotteryId } = useParams();
   const [lottery, setLottery] = useState(null);
-  const [soldNumbers, setSoldNumbers] = useState([]);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastSoldTicket, setLastSoldTicket] = useState(null);
   const [allLotteries, setAllLotteries] = useState([]);
-  const [selectedState, setSelectedState] = useState(lotteryId || '');
+  const [selectedState, setSelectedState] = useState('');
   const [selectedStateName, setSelectedStateName] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('matin');
   const [showReceipt, setShowReceipt] = useState(false);
@@ -88,42 +33,37 @@ const SellTicketPage = () => {
   useEffect(() => {
     getOpenLotteries()
       .then(lotteries => {
-        console.log('Fetched Lotteries:', lotteries); // Debug log
+        console.log('Fetched Lotteries:', lotteries);
         const sorted = lotteries.sort((a, b) => {
           const aIsGeorgia = a.name.toLowerCase().includes('georgia');
           const bIsGeorgia = b.name.toLowerCase().includes('georgia');
           return bIsGeorgia - aIsGeorgia;
         });
         setAllLotteries(sorted);
-        
-        // Set default state if none selected
-        if (!selectedState && sorted.length > 0) {
-          // Try to find Georgia first, otherwise use first lottery
+
+        // Set default lottery and state if none selected
+        if (!lotteryId && sorted.length > 0) {
           const georgiaLottery = sorted.find(l => l.name.toLowerCase().includes('georgia'));
           const defaultLottery = georgiaLottery || sorted[0];
-          
-          // Set the lottery data
           setLottery(defaultLottery);
-          
-          // Try to extract state from lottery name, default to Georgia
-          const state = US_STATES.find(s => defaultLottery.name.toLowerCase().includes(s.name.toLowerCase()));
-          const defaultState = state || US_STATES.find(s => s.name === 'Georgia');
-          
-          if (defaultState) {
-            setSelectedState(defaultState.abbreviation);
-            setSelectedStateName(defaultState.name);
+          // Set the first state from the lottery's states array
+          if (defaultLottery.states && defaultLottery.states.length > 0) {
+            const firstState = defaultLottery.states[0];
+            setSelectedState(firstState);
+            setSelectedStateName(firstState.charAt(0).toUpperCase() + firstState.slice(1));
           }
         }
-        
+
         // Handle URL parameter
         if (lotteryId) {
           const selectedLottery = sorted.find(l => l._id === lotteryId);
           if (selectedLottery) {
             setLottery(selectedLottery);
-            const state = US_STATES.find(s => selectedLottery.name.toLowerCase().includes(s.name.toLowerCase()));
-            if (state) {
-              setSelectedState(state.abbreviation);
-              setSelectedStateName(state.name);
+            // Set the first state from the lottery's states array
+            if (selectedLottery.states && selectedLottery.states.length > 0) {
+              const firstState = selectedLottery.states[0];
+              setSelectedState(firstState);
+              setSelectedStateName(firstState.charAt(0).toUpperCase() + firstState.slice(1));
             }
           }
         }
@@ -137,32 +77,28 @@ const SellTicketPage = () => {
   useEffect(() => {
     // Only load lottery data if we have allLotteries and selectedState
     if (!selectedState || allLotteries.length === 0) return;
-    
+
     const loadLotteryData = async () => {
       try {
         setLoading(true);
-        
+
         // Find lottery for the selected state
-        const stateLottery = allLotteries.find(l => {
-          const state = US_STATES.find(s => s.abbreviation === selectedState);
-          return state && l.name.toLowerCase().includes(state.name.toLowerCase());
-        });
-        
+        const stateLottery = allLotteries.find(l => l.states.includes(selectedState));
+
         if (stateLottery) {
           const lotteryData = await getLotteryById(stateLottery._id);
-          const soldNumbersData = await getSoldNumbersForLottery(stateLottery._id);
-          console.log('Lottery Data:', lotteryData); // Debug log
-          console.log('Sold Numbers:', soldNumbersData); // Debug log
+          console.log('Lottery Data:', lotteryData);
           setLottery(lotteryData);
-          setSoldNumbers(soldNumbersData);
-        } else {
-          // If no lottery found for state, use first available lottery
-          if (allLotteries.length > 0) {
-            const defaultLottery = allLotteries[0];
-            const lotteryData = await getLotteryById(defaultLottery._id);
-            const soldNumbersData = await getSoldNumbersForLottery(defaultLottery._id);
-            setLottery(lotteryData);
-            setSoldNumbers(soldNumbersData);
+        } else if (allLotteries.length > 0) {
+          // Fallback to first available lottery
+          const defaultLottery = allLotteries[0];
+          const lotteryData = await getLotteryById(defaultLottery._id);
+          setLottery(lotteryData);
+          // Update selected state to match the default lottery
+          if (defaultLottery.states && defaultLottery.states.length > 0) {
+            const firstState = defaultLottery.states[0];
+            setSelectedState(firstState);
+            setSelectedStateName(firstState.charAt(0).toUpperCase() + firstState.slice(1));
           }
         }
       } catch (err) {
@@ -207,10 +143,6 @@ const SellTicketPage = () => {
     setShowReceipt(true);
     setShowSuccess(true);
     setCopied(false);
-    const newlySold = ticket.bets.flatMap(bet =>
-      bet.betType === 'bolet' ? [bet.numbers[0]] : bet.numbers
-    );
-    setSoldNumbers(prev => [...prev, ...newlySold]);
     setSelectedNumbers([]);
     localStorage.setItem('isTicketPrintCall', 'N');
   };
@@ -251,6 +183,9 @@ const SellTicketPage = () => {
           betType: bet.betType,
           numbers: bet.numbers,
           amount: bet.amount,
+          displayText: bet.betType === 'mariage' && bet.numbers.length === 2 
+            ? `${bet.numbers[0]} X ${bet.numbers[1]}`
+            : bet.numbers.join(', ')
         })),
         totalAmount: lastSoldTicket.totalAmount,
       };
@@ -277,7 +212,7 @@ const SellTicketPage = () => {
 
     localStorage.setItem('isTicketPrintCall', 'N');
     setShowReceipt(false);
-  };
+  }; 
 
   if (loading) return <p className="text-center py-4">Loading...</p>;
   if (error) return <p className="text-red-500 text-center py-4">{error}</p>;
@@ -386,7 +321,10 @@ const SellTicketPage = () => {
                     {t('type')}: {bet.betType}
                   </p>
                   <p style={{ margin: '2px 0', fontSize: '12px' }}>
-                    {t('numbers')}: {bet.numbers.join(', ')}
+                    {t('numbers')}: {bet.betType === 'mariage' && bet.numbers.length === 2 
+                      ? `${bet.numbers[0]} X ${bet.numbers[1]}`
+                      : bet.numbers.join(', ')
+                    }
                   </p>
                   <p style={{ margin: '2px 0', fontSize: '12px' }}>
                     {t('amount')}: ${bet.amount.toFixed(2)}
@@ -427,27 +365,22 @@ const SellTicketPage = () => {
               <select
                 value={selectedState}
                 onChange={e => {
-                  const newStateId = e.target.value;
-                  setSelectedState(newStateId);
-                  
-                  // Find the state name from US_STATES
-                  const state = US_STATES.find(s => s.abbreviation === newStateId);
-                  setSelectedStateName(state ? state.name : newStateId);
+                  const newState = e.target.value;
+                  setSelectedState(newState);
+                  setSelectedStateName(newState.charAt(0).toUpperCase() + newState.slice(1));
                 }}
                 className="w-full rounded-lg border-gray-300 shadow-sm px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 appearance-none cursor-pointer"
               >
                 <option value="" disabled className="text-gray-500">
                   Select a state
                 </option>
-                
-                {/* All US States */}
-                {US_STATES.map(state => (
+                {lottery?.states?.map(state => (
                   <option 
-                    key={state.abbreviation} 
-                    value={state.abbreviation}
+                    key={state} 
+                    value={state}
                     className="text-gray-700"
                   >
-                    {state.name}
+                    {state.charAt(0).toUpperCase() + state.slice(1)}
                   </option>
                 ))}
               </select>
@@ -515,7 +448,7 @@ const SellTicketPage = () => {
       </div>
 
       {/* Lottery Info Header */}
-      <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 sm:p-6 border border-blue-100">
+      <div className="mb-6 bg-white rounded-lg p-4 sm:p-6 border border-gray-200">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{lottery.name}</h1>
         <p className="text-gray-600 text-sm sm:text-base">{t('select_numbers')}</p>
         {selectedStateName && (
@@ -530,7 +463,6 @@ const SellTicketPage = () => {
         <div className="lg:col-span-2">
           <TicketGrid
             lottery={lottery}
-            soldNumbers={soldNumbers}
             selectedNumbers={selectedNumbers}
             onNumberSelect={handleNumberSelect}
           />

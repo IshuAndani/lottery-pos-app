@@ -92,3 +92,11 @@ exports.settleAgentBalance = async (agentId, amount, adminId, description) => {
 
   return agent;
 };
+
+exports.deleteAgent = async (agentId) => {
+  const agent = await User.findByIdAndDelete(agentId);
+  if (!agent) {
+    throw new ApiError(404, 'No agent found with that ID.');
+  }
+  return agent;
+};

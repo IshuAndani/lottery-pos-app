@@ -67,3 +67,19 @@ exports.settleBalance = asyncHandler(async (req, res, next) => {
     data: { agent },
   });
 });
+
+// agentController.js
+exports.deleteAgent = asyncHandler(async (req, res, next) => {
+  const agentId = req.params.id;
+  const agent = await agentService.deleteAgent(agentId);
+
+  if (!agent) {
+    return next(new ApiError(404, 'No agent found with that ID.'));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Agent has been deleted.',
+    data: null,
+  });
+});

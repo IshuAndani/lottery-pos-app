@@ -49,6 +49,18 @@ const lotterySchema = new mongoose.Schema({
     type: Number,
     required: [true, 'The number of winning numbers is required.'],
   },
+  // NEW: List of states where the lottery is available
+  states: {
+    type: [String],
+    required: [true, 'At least one state must be specified.'],
+    default: [],
+    validate: {
+      validator: function (v) {
+        return v.length > 0;
+      },
+      message: 'At least one state must be specified.'
+    }
+  }
 }, { timestamps: true });
 
 const Lottery = mongoose.model('Lottery', lotterySchema);

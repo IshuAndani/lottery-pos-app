@@ -66,6 +66,8 @@ const ManageLotteriesPage = () => {
           <h3 className="text-xl font-bold text-purple-800">{lottery.name}</h3>
           <p className="text-sm text-gray-500 mt-1">Draw: {new Date(lottery.drawDate).toLocaleString()}</p>
           <p className="mt-2">Tickets Sold: {lottery.ticketsSold}</p>
+          <p className="mt-2">Available in: {lottery.states.join(', ')}</p>
+          <p className="mt-2">Payout Multipliers: Bolet: {lottery.payoutRules.bolet}, Mariage: {lottery.payoutRules.mariage}</p>
           {lottery.status === 'completed' && (
             <p className="font-semibold">Winners: {lottery.winningNumbers.join(', ')}</p>
           )}

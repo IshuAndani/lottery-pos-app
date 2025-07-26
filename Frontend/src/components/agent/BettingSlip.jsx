@@ -6,6 +6,7 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [betType, setBetType] = useState('bolet');
+  const [mariagePairs, setMariagePairs] = useState([]);
 
   // Effect to synchronize the local 'bets' state with the 'selectedNumbers' prop for bolet
   useEffect(() => {
@@ -15,11 +16,17 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
         return acc;
       }, {});
       setBets(newBets);
-    } else if (betType === 'mariage') {
-      // Initialize single amount for mariage bet
-      setBets({ mariage: bets.mariage || '' });
     }
   }, [selectedNumbers, betType]);
+
+  // Effect to reset mariage pairs when switching bet types
+  useEffect(() => {
+    if (betType === 'mariage') {
+      // Keep existing pairs, don't reset
+    } else {
+      setMariagePairs([]);
+    }
+  }, [betType]);
 
   const handleAmountChange = (number, value) => {
     if (value === '') {
@@ -32,25 +39,53 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
     }
   };
 
-  const handleMariageAmountChange = (value) => {
+  const addMariagePair = () => {
+    if (selectedNumbers.length < 2) {
+      setError('Please select at least 2 numbers to create a mariage pair.');
+      return;
+    }
+    
+    // Create a new pair from selected numbers (use first two if more than 2 selected)
+    const newPair = {
+      id: Date.now(),
+      numbers: [selectedNumbers[0], selectedNumbers[1]],
+      amount: ''
+    };
+    
+    setMariagePairs(prev => [...prev, newPair]);
+    setError('');
+    
+    // Clear selection after adding pair
+    onClearSelection();
+  };
+
+  const updateMariagePairAmount = (pairId, value) => {
     if (value === '') {
-      setBets({ mariage: '' });
+      setMariagePairs(prev => prev.map(pair => 
+        pair.id === pairId ? { ...pair, amount: '' } : pair
+      ));
       return;
     }
     const newAmount = Number(value);
     if (!isNaN(newAmount) && newAmount >= 0) {
-      setBets({ mariage: newAmount });
+      setMariagePairs(prev => prev.map(pair => 
+        pair.id === pairId ? { ...pair, amount: newAmount } : pair
+      ));
     }
+  };
+
+  const removeMariagePair = (pairId) => {
+    setMariagePairs(prev => prev.filter(pair => pair.id !== pairId));
   };
 
   const totalAmount = useMemo(() => {
     if (betType === 'bolet') {
       return Object.values(bets).reduce((sum, amount) => sum + (Number(amount) || 0), 0);
     } else if (betType === 'mariage') {
-      return Number(bets.mariage) || 0;
+      return mariagePairs.reduce((sum, pair) => sum + (Number(pair.amount) || 0), 0);
     }
     return 0;
-  }, [bets, betType]);
+  }, [bets, betType, mariagePairs]);
 
   const handleSubmit = async () => {
     let betsPayload = [];
@@ -71,20 +106,21 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
         betType: 'bolet'
       }));
     } else if (betType === 'mariage') {
-      if (selectedNumbers.length < 2) {
-        setError('Please select at least two numbers for mariage.');
+      const validPairs = mariagePairs.filter(pair => Number(pair.amount) > 0);
+      if (validPairs.length === 0) {
+        setError('Please add at least one mariage pair with a bet amount.');
         return;
       }
-      if (!bets.mariage || Number(bets.mariage) < 1) {
-        setError('The minimum bet for mariage is $1.00.');
+      const hasInvalidBet = validPairs.some(pair => Number(pair.amount) < 1);
+      if (hasInvalidBet) {
+        setError('The minimum bet for each mariage pair is $1.00.');
         return;
       }
-      // All selected numbers form one mariage combination
-      betsPayload = [{
-        numbers: [...selectedNumbers],
-        amount: Number(bets.mariage),
+      betsPayload = validPairs.map(pair => ({
+        numbers: pair.numbers,
+        amount: Number(pair.amount),
         betType: 'mariage'
-      }];
+      }));
     }
     setError('');
     setIsSubmitting(true);
@@ -100,13 +136,14 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
 
   const handleClear = () => {
     setBets({});
+    setMariagePairs([]);
     setError('');
     onClearSelection();
   };
 
   const isSellDisabled = isSubmitting || totalAmount === 0 || 
     (betType === 'bolet' && Object.values(bets).some(amount => Number(amount) > 0 && Number(amount) < 1)) ||
-    (betType === 'mariage' && (!bets.mariage || Number(bets.mariage) < 1));
+    (betType === 'mariage' && mariagePairs.some(pair => Number(pair.amount) > 0 && Number(pair.amount) < 1));
 
   return (
     <div className="p-2 sm:p-4 bg-gray-100 rounded-lg shadow-md w-full">
@@ -119,6 +156,7 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
           <input type="radio" name="betType" value="mariage" checked={betType === 'mariage'} onChange={() => setBetType('mariage')} /> Mariage
         </label>
       </div>
+      
       {betType === 'bolet' ? (
         selectedNumbers.length === 0 ? (
           <p className="text-gray-500">Sélectionnez des numéros dans la grille pour parier.</p>
@@ -141,25 +179,70 @@ const BettingSlip = ({ lotteryId, selectedNumbers, onTicketSold, onClearSelectio
           </div>
         )
       ) : (
-        selectedNumbers.length === 0 ? (
-          <p className="text-gray-500">Sélectionnez des numéros dans la grille pour parier.</p>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex flex-col items-start gap-2">
-              <p className="text-gray-700">Numéros sélectionnés: {selectedNumbers.join(', ')}</p>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Montant pour le mariage"
-                value={bets.mariage || ''}
-                onChange={e => handleMariageAmountChange(e.target.value)}
-                className="w-full sm:w-32 px-2 py-1 border rounded-md shadow-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+        <div className="space-y-4">
+          {/* Add new pair section */}
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+            {selectedNumbers.length < 2 ? (
+              <p className="text-gray-500 text-center">
+                Sélectionnez 2 numéros dans la grille pour créer une paire de mariage.
+              </p>
+            ) : (
+              <div className="text-center">
+                <p className="text-gray-700 mb-2">
+                  Numéros sélectionnés: {selectedNumbers.slice(0, 2).join(' X ')}
+                  {selectedNumbers.length > 2 && (
+                    <span className="text-sm text-gray-500"> (Les premiers 2 seront utilisés)</span>
+                  )}
+                </p>
+                <button
+                  onClick={addMariagePair}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm"
+                >
+                  Ajouter cette paire
+                </button>
+              </div>
+            )}
           </div>
-        )
+
+          {/* Existing pairs */}
+          {mariagePairs.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-semibold text-gray-700">Paires de mariage:</h4>
+              {mariagePairs.map(pair => (
+                <div key={pair.id} className="flex flex-col sm:flex-row items-center justify-between gap-2 bg-white p-3 rounded-md border">
+                  <span className="font-bold text-lg text-blue-600">
+                    {pair.numbers[0]} X {pair.numbers[1]}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      placeholder="Montant"
+                      value={pair.amount}
+                      onChange={(e) => updateMariagePairAmount(pair.id, e.target.value)}
+                      className="w-24 px-2 py-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <button
+                      onClick={() => removeMariagePair(pair.id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition-colors text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mariagePairs.length === 0 && (
+            <p className="text-gray-500 text-center italic">
+              Aucune paire de mariage ajoutée.
+            </p>
+          )}
+        </div>
       )}
+      
       <hr className="my-4" />
       <div className="flex flex-col sm:flex-row justify-between font-bold text-xl gap-2">
         <span>Total:</span>

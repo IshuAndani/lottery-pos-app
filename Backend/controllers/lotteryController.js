@@ -2,7 +2,33 @@ const lotteryService = require('../services/lotteryService');
 const asyncHandler = require('../utils/asyncHandler');
 
 exports.createLottery = asyncHandler(async (req, res, next) => {
-  const lottery = await lotteryService.createLottery(req.body);
+  const { name, drawDate, validNumberRange, maxPerNumber, numberOfWinningNumbers, payoutRules, states } = req.body;
+  
+  // Validate payoutRules to ensure 'bolet' and 'mariage' are included
+  if (!payoutRules || !payoutRules.bolet || !payoutRules.mariage) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Payout rules must include both bolet and mariage multipliers.'
+    });
+  }
+
+  // Validate states
+  if (!states || !Array.isArray(states) || states.length === 0) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'At least one state must be specified.'
+    });
+  }
+
+  const lottery = await lotteryService.createLottery({
+    name,
+    drawDate,
+    validNumberRange,
+    maxPerNumber,
+    numberOfWinningNumbers,
+    payoutRules,
+    states
+  });
   res.status(201).json({
     status: 'success',
     data: { lottery },

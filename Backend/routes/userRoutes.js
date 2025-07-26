@@ -22,6 +22,8 @@ router.route('/agents/:id')
   
 router.patch('/agents/:id/deactivate', agentController.deactivateAgent);
 
+router.delete('/agents/:id', agentController.deleteAgent);
+
 router.post(
   '/agents/:id/settle-balance', 
   authMiddleware.restrictTo('admin'), 
