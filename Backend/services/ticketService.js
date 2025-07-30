@@ -18,8 +18,8 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
 
   // Validate bets
   for (const bet of bets) {
-    if (!['bolet', 'mariage'].includes(bet.betType)) {
-      throw new ApiError(400, `Invalid bet type: ${bet.betType}. Must be 'bolet' or 'mariage'.`);
+    if (!['bolet', 'mariage', 'play3', 'play4'].includes(bet.betType)) {
+      throw new ApiError(400, `Invalid bet type: ${bet.betType}. Must be 'bolet', 'mariage', 'play3', or 'play4'.`);
     }
     if (!Array.isArray(bet.numbers) || bet.numbers.length === 0) {
       throw new ApiError(400, `Bet must include a numbers array.`);
@@ -30,6 +30,12 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     if (bet.betType === 'mariage' && bet.numbers.length < 2) {
       throw new ApiError(400, `Mariage bets must have at least two numbers.`);
     }
+    if (bet.betType === 'play3' && bet.numbers.length !== 3) {
+      throw new ApiError(400, `Play3 bets must have exactly three numbers.`);
+    }
+    if (bet.betType === 'play4' && bet.numbers.length !== 4) {
+      throw new ApiError(400, `Play4 bets must have exactly four numbers.`);
+    }
     if (bet.numbers.some(num => typeof num !== 'string' || !num)) {
       throw new ApiError(400, `All numbers must be non-empty strings.`);
     }
@@ -39,6 +45,13 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     }
     if (isNaN(bet.amount) || bet.amount <= 0) {
       throw new ApiError(400, `Bet amount must be a positive number.`);
+    }
+    // Validate state for play3 and play4
+    if (['play3', 'play4'].includes(bet.betType) && !lottery.states.includes(bet.state)) {
+      throw new ApiError(400, `Invalid state for ${bet.betType}: ${bet.state}. Must be one of ${lottery.states.join(', ')}.`);
+    }
+    if (['bolet', 'mariage'].includes(bet.betType) && bet.state && bet.state !== 'haiti') {
+      throw new ApiError(400, `Bolet and mariage bets must use state 'haiti'. Received: ${bet.state}.`);
     }
   }
 
@@ -73,18 +86,43 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
   }
 
   const agent = await User.findById(agentId);
+  if (!agent) {
+    throw new ApiError(400, `Agent with ID ${agentId} not found.`);
+  }
   const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
   const commissionAmount = totalAmount * (agent.commissionRate / 100);
   const netOwedToAdmin = totalAmount - commissionAmount;
 
   let newTicket;
   try {
+    // Generate ticket ID and ensure uniqueness
+    let ticketId;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 5;
+    while (!isUnique && attempts < maxAttempts) {
+      ticketId = generateTicketId();
+      const existingTicket = await Ticket.findOne({ ticketId });
+      if (!existingTicket) {
+        isUnique = true;
+      }
+      attempts++;
+    }
+    if (!isUnique) {
+      throw new Error('Failed to generate a unique ticket ID after maximum attempts.');
+    }
+
     // Create ticket
     newTicket = await Ticket.create({
-      ticketId: generateTicketId(),
+      ticketId,
       lottery: lotteryId,
       agent: agentId,
-      bets,
+      bets: bets.map(bet => ({
+        numbers: bet.numbers,
+        amount: bet.amount,
+        betType: bet.betType,
+        state: bet.state || 'haiti' // Default to 'haiti' if state is not provided
+      })),
       totalAmount,
     });
 
@@ -106,8 +144,15 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     lottery.ticketsSold += 1;
     await lottery.save();
   } catch (error) {
-    console.error('Ticket sale error:', error);
-    throw new ApiError(500, 'Ticket sale failed.');
+    console.error('Ticket sale error:', {
+      message: error.message,
+      stack: error.stack,
+      lotteryId,
+      agentId,
+      bets,
+      totalAmount,
+    });
+    throw new ApiError(500, `Ticket sale failed: ${error.message}`);
   }
 
   return newTicket;

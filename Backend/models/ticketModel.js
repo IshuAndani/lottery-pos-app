@@ -11,7 +11,7 @@ const betSchema = new mongoose.Schema({
   },
   betType: {
     type: String,
-    enum: ['bolet', 'mariage'],
+    enum: ['bolet', 'mariage', 'play3', 'play4'],
     required: true
   }
 });
