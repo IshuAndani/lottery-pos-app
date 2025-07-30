@@ -30,7 +30,7 @@ const SellTicketPage = () => {
   const { t } = useTranslation();
   const billRef = useRef(null);
 
-  useEffect(() => {
+useEffect(() => {
     getOpenLotteries()
       .then(lotteries => {
         console.log('Fetched Lotteries:', lotteries);
@@ -46,7 +46,6 @@ const SellTicketPage = () => {
           const georgiaLottery = sorted.find(l => l.name.toLowerCase().includes('georgia'));
           const defaultLottery = georgiaLottery || sorted[0];
           setLottery(defaultLottery);
-          // Set the first state from the lottery's states array
           if (defaultLottery.states && defaultLottery.states.length > 0) {
             const firstState = defaultLottery.states[0];
             setSelectedState(firstState);
@@ -59,7 +58,6 @@ const SellTicketPage = () => {
           const selectedLottery = sorted.find(l => l._id === lotteryId);
           if (selectedLottery) {
             setLottery(selectedLottery);
-            // Set the first state from the lottery's states array
             if (selectedLottery.states && selectedLottery.states.length > 0) {
               const firstState = selectedLottery.states[0];
               setSelectedState(firstState);
@@ -75,26 +73,20 @@ const SellTicketPage = () => {
   }, [lotteryId]);
 
   useEffect(() => {
-    // Only load lottery data if we have allLotteries and selectedState
     if (!selectedState || allLotteries.length === 0) return;
 
     const loadLotteryData = async () => {
       try {
         setLoading(true);
-
-        // Find lottery for the selected state
         const stateLottery = allLotteries.find(l => l.states.includes(selectedState));
-
         if (stateLottery) {
           const lotteryData = await getLotteryById(stateLottery._id);
           console.log('Lottery Data:', lotteryData);
           setLottery(lotteryData);
         } else if (allLotteries.length > 0) {
-          // Fallback to first available lottery
           const defaultLottery = allLotteries[0];
           const lotteryData = await getLotteryById(defaultLottery._id);
           setLottery(lotteryData);
-          // Update selected state to match the default lottery
           if (defaultLottery.states && defaultLottery.states.length > 0) {
             const firstState = defaultLottery.states[0];
             setSelectedState(firstState);
@@ -185,11 +177,10 @@ const SellTicketPage = () => {
           amount: bet.amount,
           displayText: bet.betType === 'mariage' && bet.numbers.length === 2 
             ? `${bet.numbers[0]} X ${bet.numbers[1]}`
-            : bet.numbers.join(', ')
+            : bet.numbers.join(', ') + (['play3', 'play4'].includes(bet.betType) ? ` (${bet.state})` : '')
         })),
         totalAmount: lastSoldTicket.totalAmount,
       };
-
       if (window.PrintInterface) {
         window.PrintInterface.print(JSON.stringify(receiptData));
       } else {
@@ -353,10 +344,11 @@ const SellTicketPage = () => {
 
       {/* Enhanced State Selection Section */}
       <div className="mb-6 bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+      <div className="mb-6 bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Selection Options</h3>
         
+        {/* 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          {/* State Dropdown */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               {t('state')} <span className="text-red-500">*</span>
@@ -385,7 +377,6 @@ const SellTicketPage = () => {
                 ))}
               </select>
               
-              {/* Custom dropdown arrow */}
               <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -393,7 +384,6 @@ const SellTicketPage = () => {
               </div>
             </div>
             
-            {/* Selected State Display */}
             {selectedStateName && (
               <div className="mt-2 p-2 bg-blue-50 rounded-md border border-blue-200">
                 <p className="text-sm text-blue-800">
@@ -401,7 +391,8 @@ const SellTicketPage = () => {
                 </p>
               </div>
             )}
-          </div>
+          </div> 
+        */}
 
           {/* Period Selection */}
           <div className="space-y-2">
@@ -451,11 +442,11 @@ const SellTicketPage = () => {
       <div className="mb-6 bg-white rounded-lg p-4 sm:p-6 border border-gray-200">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{lottery.name}</h1>
         <p className="text-gray-600 text-sm sm:text-base">{t('select_numbers')}</p>
-        {selectedStateName && (
+        {/* {selectedStateName && (
           <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
             📍 {selectedStateName}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Main Content Grid */}
@@ -474,6 +465,7 @@ const SellTicketPage = () => {
             onTicketSold={handleTicketSold}
             onClearSelection={handleClearSelection}
             period={selectedPeriod}
+            lottery={lottery} // Ensure lottery prop is passed
           />
         </div>
       </div>
