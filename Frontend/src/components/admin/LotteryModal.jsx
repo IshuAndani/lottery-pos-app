@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const LotteryModal = ({ isOpen, onClose, onSave }) => {
+const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
   const [formData, setFormData] = useState({
     name: '',
     drawDate: '',
@@ -15,16 +15,32 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Sample list of US states
+  // Sample list of US states (lowercase to match backend)
   const usStates = [
-    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
-    'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky',
-    'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
-    'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico',
-    'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania',
-    'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
-    'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+    'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware',
+    'florida', 'georgia', 'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky',
+    'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 'mississippi',
+    'missouri', 'montana', 'nebraska', 'nevada', 'new hampshire', 'new jersey', 'new mexico',
+    'new york', 'north carolina', 'north dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania',
+    'rhode island', 'south carolina', 'south dakota', 'tennessee', 'texas', 'utah', 'vermont',
+    'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming'
   ];
+
+  useEffect(() => {
+    if (lottery) {
+      setFormData({
+        name: lottery.name || '',
+        drawDate: lottery.drawDate ? new Date(lottery.drawDate).toISOString().slice(0, 16) : '',
+        numberOfWinningNumbers: lottery.numberOfWinningNumbers || 1,
+        'validNumberRange.min': lottery.validNumberRange?.min ?? 0,
+        'validNumberRange.max': lottery.validNumberRange?.max ?? 99,
+        'payoutRules.bolet': lottery.payoutRules?.bolet ?? 50,
+        'payoutRules.mariage': lottery.payoutRules?.mariage ?? 1000,
+        states: lottery.states || [],
+        maxPerNumber: lottery.maxPerNumber ?? 50,
+      });
+    }
+  }, [lottery]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,6 +60,24 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
     e.preventDefault();
     if (formData.states.length === 0) {
       setError('At least one state must be selected.');
+      return;
+    }
+    const min = Number(formData['validNumberRange.min']);
+    const max = Number(formData['validNumberRange.max']);
+    if (isNaN(min) || isNaN(max) || min > max) {
+      setError('Valid number range: min must be less than or equal to max.');
+      return;
+    }
+    if (Number(formData.maxPerNumber) <= 0) {
+      setError('Max tickets per number must be positive.');
+      return;
+    }
+    if (Number(formData.numberOfWinningNumbers) <= 0) {
+      setError('Number of winning numbers must be positive.');
+      return;
+    }
+    if (Number(formData['payoutRules.bolet']) <= 0 || Number(formData['payoutRules.mariage']) <= 0) {
+      setError('Payout multipliers must be positive.');
       return;
     }
     setIsSubmitting(true);
@@ -66,7 +100,7 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
     };
 
     try {
-      await onSave(payload);
+      await onSave(lottery?._id, payload);
     } catch (err) {
       setError(err.message || 'An error occurred.');
     } finally {
@@ -79,7 +113,7 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 sm:p-6">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-lg sm:max-w-md overflow-y-auto max-h-[90vh]">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Create New Lottery</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{lottery ? 'Edit Lottery' : 'Create New Lottery'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Lottery Name</label>
@@ -123,7 +157,8 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
               value={formData['validNumberRange.min']}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              disabled={lottery && lottery.ticketsSold > 0}
+              className="mt-mount w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -134,7 +169,8 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
               value={formData['validNumberRange.max']}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              disabled={lottery && lottery.ticketsSold > 0}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -145,7 +181,9 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
               min="1"
               value={formData.maxPerNumber}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              required
+              disabled={lottery && lottery.ticketsSold > 0}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -157,7 +195,8 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
               value={formData['payoutRules.bolet']}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              disabled={lottery && lottery.ticketsSold > 0}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -169,7 +208,8 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
               value={formData['payoutRules.mariage']}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              disabled={lottery && lottery.ticketsSold > 0}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -183,33 +223,39 @@ const LotteryModal = ({ isOpen, onClose, onSave }) => {
                     value={state}
                     checked={formData.states.includes(state)}
                     onChange={() => handleStateToggle(state)}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                    disabled={lottery && lottery.ticketsSold > 0}
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded disabled:cursor-not-allowed"
                   />
-                  <label htmlFor={state} className="ml-2 text-sm text-gray-700">{state}</label>
+                  <label htmlFor={state} className="ml-2 text-sm text-gray-700 capitalize">{state}</label>
                 </div>
               ))}
             </div>
-            {formData.states.length === 0 && error && (
+            {formData.states.length === 0 && error.includes('state') && (
               <p className="text-red-500 text-sm mt-1">{error}</p>
             )}
           </div>
-          {error && formData.states.length > 0 && (
+          {lottery && lottery.ticketsSold > 0 && (
+            <p className="text-yellow-600 text-sm mt-2">
+              Note: Fields affecting bets (number range, max per number, payout rules, states) cannot be edited as tickets have been sold.
+            </p>
+          )}
+          {error && !error.includes('state') && (
             <p className="text-red-500 text-sm mt-4">{error}</p>
           )}
           <div className="mt-6 flex justify-end gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded hover:bg-gray-300"
+              className="bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded hover:bg-gray-300 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-purple-600 text-white font-medium py-2 px-4 rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-purple-600 text-white font-medium py-2 px-4 rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Creating...' : 'Create Lottery'}
+              {isSubmitting ? 'Saving...' : lottery ? 'Update Lottery' : 'Create Lottery'}
             </button>
           </div>
         </form>

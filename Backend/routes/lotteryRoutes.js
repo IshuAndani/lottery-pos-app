@@ -11,7 +11,11 @@ router.route('/')
   .get(lotteryController.getAllLotteries) // Agents and Admins can view lotteries
   .post(restrictTo('admin'), lotteryController.createLottery); // Only Admins can create
 
-router.get('/:id/sold-numbers',lotteryController.getSoldNumbers);
+router.route('/:id')
+  .patch(restrictTo('admin'), lotteryController.updateLottery) // Only Admins can update
+  .delete(restrictTo('admin'), lotteryController.deleteLottery); // Only Admins can delete
+
+router.get('/:id/sold-numbers', lotteryController.getSoldNumbers);
 
 router.post('/:id/declare-winners', restrictTo('admin'), lotteryController.declareWinners);
 

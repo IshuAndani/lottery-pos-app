@@ -10,7 +10,8 @@ const mongoose = require('mongoose');
 // Helper to generate a friendly ticket ID
 const generateTicketId = () => uuidv4().slice(0, 8).toUpperCase();
 
-exports.sellTicket = async (lotteryId, agentId, bets) => {
+exports.sellTicket = async (lotteryId, agentId, bets, period) => {
+
   const lottery = await Lottery.findById(lotteryId);
   if (!lottery || lottery.status !== 'open') {
     throw new ApiError(400, 'This lottery is not open for ticket sales.');
@@ -27,8 +28,8 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     if (bet.betType === 'bolet' && bet.numbers.length !== 1) {
       throw new ApiError(400, `Bolet bets must have exactly one number per bet.`);
     }
-    if (bet.betType === 'mariage' && bet.numbers.length < 2) {
-      throw new ApiError(400, `Mariage bets must have at least two numbers.`);
+    if (bet.betType === 'mariage' && bet.numbers.length !== 2) {
+      throw new ApiError(400, `Mariage bets must have exactly two numbers.`);
     }
     if (bet.betType === 'play3' && bet.numbers.length !== 3) {
       throw new ApiError(400, `Play3 bets must have exactly three numbers.`);
@@ -39,18 +40,34 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
     if (bet.numbers.some(num => typeof num !== 'string' || !num)) {
       throw new ApiError(400, `All numbers must be non-empty strings.`);
     }
+    // Validate number range for bolet and mariage only
+    if (['bolet', 'mariage'].includes(bet.betType)) {
+      if (bet.numbers.some(num => {
+        const numValue = Number(num);
+        return isNaN(numValue) || numValue < lottery.validNumberRange.min || numValue > lottery.validNumberRange.max;
+      })) {
+        throw new ApiError(400, `All numbers for ${bet.betType} must be within the range ${lottery.validNumberRange.min}-${lottery.validNumberRange.max}.`);
+      }
+    }
     const uniqueNumbers = new Set(bet.numbers);
     if (uniqueNumbers.size !== bet.numbers.length) {
       throw new ApiError(400, `Duplicate numbers are not allowed in a single bet.`);
     }
-    if (isNaN(bet.amount) || bet.amount <= 0) {
-      throw new ApiError(400, `Bet amount must be a positive number.`);
+    if (!Array.isArray(bet.amounts) || bet.amounts.length === 0) {
+      throw new ApiError(400, `Bet must include an amounts array.`);
+    }
+    const expectedAmountsLength = bet.betType === 'play3' ? 3 : bet.betType === 'play4' ? 4 : 1;
+    if (bet.amounts.length !== expectedAmountsLength) {
+      throw new ApiError(400, `Expected ${expectedAmountsLength} amount(s) for ${bet.betType}, but got ${bet.amounts.length}.`);
+    }
+    if (bet.amounts.some(amt => isNaN(amt) || amt <= 0)) {
+      throw new ApiError(400, `All amounts must be positive numbers.`);
     }
     // Validate state for play3 and play4
     if (['play3', 'play4'].includes(bet.betType) && !lottery.states.includes(bet.state)) {
       throw new ApiError(400, `Invalid state for ${bet.betType}: ${bet.state}. Must be one of ${lottery.states.join(', ')}.`);
     }
-    if (['bolet', 'mariage'].includes(bet.betType) && bet.state && bet.state !== 'haiti') {
+    if (['bolet', 'mariage'].includes(bet.betType) && bet.state !== 'haiti') {
       throw new ApiError(400, `Bolet and mariage bets must use state 'haiti'. Received: ${bet.state}.`);
     }
   }
@@ -58,8 +75,10 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
   // Check max per number
   const betAmounts = {};
   for (const bet of bets) {
-    for (const num of bet.numbers) {
-      betAmounts[num] = (betAmounts[num] || 0) + bet.amount;
+    for (let i = 0; i < bet.numbers.length; i++) {
+      const num = bet.numbers[i];
+      const amount = bet.amounts[bet.betType === 'bolet' || bet.betType === 'mariage' ? 0 : i] || 0; // Use first amount for bolet and mariage
+      betAmounts[num] = (betAmounts[num] || 0) + amount;
     }
   }
 
@@ -68,11 +87,11 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
   for (const ticket of tickets) {
     for (const bet of ticket.bets) {
       if (bet.numbers && Array.isArray(bet.numbers)) {
-        for (const num of bet.numbers) {
-          soldTotals[num] = (soldTotals[num] || 0) + bet.amount;
+        for (let i = 0; i < bet.numbers.length; i++) {
+          const num = bet.numbers[i];
+          const amount = bet.amounts[bet.betType === 'bolet' || bet.betType === 'mariage' ? 0 : i] || 0; // Use first amount for bolet and mariage
+          soldTotals[num] = (soldTotals[num] || 0) + amount;
         }
-      } else if (bet.number) {
-        soldTotals[bet.number] = (soldTotals[bet.number] || 0) + bet.amount;
       }
     }
   }
@@ -89,7 +108,7 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
   if (!agent) {
     throw new ApiError(400, `Agent with ID ${agentId} not found.`);
   }
-  const totalAmount = bets.reduce((sum, bet) => sum + bet.amount, 0);
+  const totalAmount = bets.reduce((sum, bet) => sum + bet.amounts.reduce((acc, amt) => acc + (amt || 0), 0), 0);
   const commissionAmount = totalAmount * (agent.commissionRate / 100);
   const netOwedToAdmin = totalAmount - commissionAmount;
 
@@ -117,9 +136,10 @@ exports.sellTicket = async (lotteryId, agentId, bets) => {
       ticketId,
       lottery: lotteryId,
       agent: agentId,
+      period,
       bets: bets.map(bet => ({
         numbers: bet.numbers,
-        amount: bet.amount,
+        amounts: bet.amounts.map(Number),
         betType: bet.betType,
         state: bet.state || 'haiti' // Default to 'haiti' if state is not provided
       })),

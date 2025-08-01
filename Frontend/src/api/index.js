@@ -5,10 +5,7 @@ import axios from 'axios';
  * This instance will be used for all API requests throughout the application.
  */
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lottery-pos-app-bel1.onrender.com/api/v1',
-  // baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
-
-  // Removed withCredentials: true, since we are not using cookies anymore
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
 });
 
 // Add a request interceptor to attach the JWT token from localStorage
@@ -199,10 +196,28 @@ export const createLottery = async (lotteryData) => {
   }
 };
 
+export const updateLottery = async (lotteryId, lotteryData) => {
+  try {
+    const response = await apiClient.patch(`/lotteries/${lotteryId}`, lotteryData);
+    return response.data.data.lottery;
+  } catch (error) {
+    throw error.response.data || new Error('Failed to update lottery');
+  }
+};
+
+export const deleteLottery = async (lotteryId) => {
+  try {
+    const response = await apiClient.delete(`/lotteries/${lotteryId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data || new Error('Failed to delete lottery');
+  }
+};
+
 export const declareWinners = async (lotteryId, winningNumbers) => {
   try {
-    const response = await apiClient.post(`/lotteries/${lotteryId}/declareWinners`, { winningNumbers });
-    return response.data;
+    const response = await apiClient.post(`/lotteries/${lotteryId}/declare-winners`, { winningNumbers });
+    return response.data.data.lottery;
   } catch (error) {
     throw error.response.data || new Error('Failed to declare winners');
   }

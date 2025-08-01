@@ -2,10 +2,10 @@ const ticketService = require('../services/ticketService');
 const asyncHandler = require('../utils/asyncHandler');
 
 exports.createTicket = asyncHandler(async (req, res, next) => {
-  const { lotteryId, bets } = req.body;
+  const { lotteryId, bets, period } = req.body;
   const agentId = req.user.id; // From the protect middleware
   console.log('Creating ticket for agent:', agentId, 'with bets:', bets);
-  const ticket = await ticketService.sellTicket(lotteryId, agentId, bets);
+  const ticket = await ticketService.sellTicket(lotteryId, agentId, bets, period);
 
   res.status(201).json({
     status: 'success',
