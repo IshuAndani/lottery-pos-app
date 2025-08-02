@@ -6,12 +6,16 @@ const User = require('../models/userModel');
 const Transaction = require('../models/transactionModel');
 const ApiError = require('../utils/ApiError');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
-// Helper to generate a friendly ticket ID
-const generateTicketId = () => uuidv4().slice(0, 8).toUpperCase();
+
+const generateTicketId = () => {
+  const timestamp = Date.now().toString(36); // Convert timestamp to base36 for shorter string
+  const randomStr = crypto.randomBytes(4).toString('hex'); // Generate 8 random characters
+  return `${timestamp}-${randomStr}`.toUpperCase().slice(0, 10); // Combine and limit to 10 characters
+};
 
 exports.sellTicket = async (lotteryId, agentId, bets, period) => {
-
   const lottery = await Lottery.findById(lotteryId);
   if (!lottery || lottery.status !== 'open') {
     throw new ApiError(400, 'This lottery is not open for ticket sales.');
@@ -31,11 +35,8 @@ exports.sellTicket = async (lotteryId, agentId, bets, period) => {
     if (bet.betType === 'mariage' && bet.numbers.length !== 2) {
       throw new ApiError(400, `Mariage bets must have exactly two numbers.`);
     }
-    if (bet.betType === 'play3' && bet.numbers.length !== 3) {
-      throw new ApiError(400, `Play3 bets must have exactly three numbers.`);
-    }
-    if (bet.betType === 'play4' && bet.numbers.length !== 4) {
-      throw new ApiError(400, `Play4 bets must have exactly four numbers.`);
+    if (['play3', 'play4'].includes(bet.betType) && bet.numbers.length !== 1) {
+      throw new ApiError(400, `${bet.betType} bets must have exactly one number.`);
     }
     if (bet.numbers.some(num => typeof num !== 'string' || !num)) {
       throw new ApiError(400, `All numbers must be non-empty strings.`);
@@ -56,9 +57,8 @@ exports.sellTicket = async (lotteryId, agentId, bets, period) => {
     if (!Array.isArray(bet.amounts) || bet.amounts.length === 0) {
       throw new ApiError(400, `Bet must include an amounts array.`);
     }
-    const expectedAmountsLength = bet.betType === 'play3' ? 3 : bet.betType === 'play4' ? 4 : 1;
-    if (bet.amounts.length !== expectedAmountsLength) {
-      throw new ApiError(400, `Expected ${expectedAmountsLength} amount(s) for ${bet.betType}, but got ${bet.amounts.length}.`);
+    if (bet.amounts.length !== 1) {
+      throw new ApiError(400, `Expected exactly one amount for ${bet.betType}, but got ${bet.amounts.length}.`);
     }
     if (bet.amounts.some(amt => isNaN(amt) || amt <= 0)) {
       throw new ApiError(400, `All amounts must be positive numbers.`);
@@ -77,7 +77,7 @@ exports.sellTicket = async (lotteryId, agentId, bets, period) => {
   for (const bet of bets) {
     for (let i = 0; i < bet.numbers.length; i++) {
       const num = bet.numbers[i];
-      const amount = bet.amounts[bet.betType === 'bolet' || bet.betType === 'mariage' ? 0 : i] || 0; // Use first amount for bolet and mariage
+      const amount = bet.amounts[0]; // Use first amount for all bet types
       betAmounts[num] = (betAmounts[num] || 0) + amount;
     }
   }
@@ -89,7 +89,7 @@ exports.sellTicket = async (lotteryId, agentId, bets, period) => {
       if (bet.numbers && Array.isArray(bet.numbers)) {
         for (let i = 0; i < bet.numbers.length; i++) {
           const num = bet.numbers[i];
-          const amount = bet.amounts[bet.betType === 'bolet' || bet.betType === 'mariage' ? 0 : i] || 0; // Use first amount for bolet and mariage
+          const amount = bet.amounts[0]; // Use first amount for all bet types
           soldTotals[num] = (soldTotals[num] || 0) + amount;
         }
       }

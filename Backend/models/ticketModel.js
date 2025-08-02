@@ -4,24 +4,10 @@ const betSchema = new mongoose.Schema({
   numbers: {
     type: [String],
     required: true,
-    validate: {
-      validator: function (v) {
-        const expectedLength = this.betType === 'mariage' ? 2 : this.betType === 'play3' ? 3 : this.betType === 'play4' ? 4 : 1;
-        return v.length === expectedLength;
-      },
-      message: props => `Expected ${props.path} to have length ${props.value.length === 1 ? '1 for bolet' : props.value.length === 2 ? '2 for mariage' : props.value.length === 3 ? '3 for play3' : '4 for play4'}, but got ${props.value.length}`
-    }
   },
   amounts: {
     type: [Number],
-    required: true,
-    validate: {
-      validator: function (v) {
-        const expectedLength = this.betType === 'play3' ? 3 : this.betType === 'play4' ? 4 : 1;
-        return v.length === expectedLength && v.every(amt => amt >= 1);
-      },
-      message: props => `Expected ${props.path} to have ${props.value.length === 1 ? '1 amount for bolet or mariage' : props.value.length === 3 ? '3 amounts for play3' : '4 amounts for play4'}, with each at least 1, but got ${props.value.length}`
-    }
+    required: true
   },
   betType: {
     type: String,
