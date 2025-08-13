@@ -18,7 +18,7 @@ const lotterySchema = new mongoose.Schema({
     type: Map,
     of: Number,
     required: true,
-    default: { bolet: 50, mariage: 1000 }
+    default: { bolet: 50, mariage: 1000, play3: 500, play4: 5000 }
   },
   // A simple array of winning numbers declared by the admin.
   winningNumbers: {

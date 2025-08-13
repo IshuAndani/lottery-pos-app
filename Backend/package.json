@@ -17,6 +17,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "moment-timezone": "^0.6.0",
     "mongoose": "^6.0.0",
     "nanoid": "^5.1.5",
     "node-cron": "^4.2.0",

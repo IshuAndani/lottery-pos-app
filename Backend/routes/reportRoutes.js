@@ -9,13 +9,13 @@ router.use(protect);
 
 // --- Admin Report Routes ---
 router.get(
-  '/admin/lottery/:lotteryId', 
-  restrictTo('admin'), 
+  '/admin/lottery/:lotteryId',
+  restrictTo('admin'),
   reportController.getLotteryReport
 );
 router.get(
-  '/admin/agents', 
-  restrictTo('admin'), 
+  '/admin/agents',
+  restrictTo('admin'),
   reportController.getAgentsReport
 );
 router.get(
@@ -23,11 +23,21 @@ router.get(
   restrictTo('admin'),
   reportController.getAdminSummaryReport
 );
+router.get(
+  '/admin/agent-tickets',
+  restrictTo('admin'),
+  reportController.getAgentTicketsReport
+);
+router.get(
+  '/admin/tickets-sold',
+  restrictTo('admin'),
+  reportController.getTicketsSoldByDate
+);
 
 // --- Agent Report Route ---
 router.get(
-  '/agent/dashboard', 
-  restrictTo('agent'), 
+  '/agent/dashboard',
+  restrictTo('agent'),
   reportController.getAgentReport
 );
 

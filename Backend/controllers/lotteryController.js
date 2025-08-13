@@ -4,11 +4,11 @@ const asyncHandler = require('../utils/asyncHandler');
 exports.createLottery = asyncHandler(async (req, res, next) => {
   const { name, drawDate, validNumberRange, maxPerNumber, numberOfWinningNumbers, payoutRules, states } = req.body;
   
-  // Validate payoutRules to ensure 'bolet' and 'mariage' are included
-  if (!payoutRules || !payoutRules.bolet || !payoutRules.mariage) {
+  // Validate payoutRules to ensure 'bolet', 'mariage', 'play3', and 'play4' are included
+  if (!payoutRules || !payoutRules.bolet || !payoutRules.mariage || !payoutRules.play3 || !payoutRules.play4) {
     return res.status(400).json({
       status: 'error',
-      message: 'Payout rules must include both bolet and mariage multipliers.'
+      message: 'Payout rules must include bolet, mariage, play3, and play4 multipliers.'
     });
   }
 
