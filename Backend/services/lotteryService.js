@@ -62,6 +62,10 @@ exports.updateLottery = async (lotteryId, updateData) => {
       throw new ApiError(400, 'Cannot update validNumberRange, maxPerNumber, payoutRules, or states when tickets have been sold.');
     }
   }
+  //if lottery date in future then change status to open
+  if (updates.drawDate && new Date(updates.drawDate) > new Date()) {
+    updates.status = 'open';
+  }
 
   const updatedLottery = await Lottery.findByIdAndUpdate(lotteryId, updates, {
     new: true,

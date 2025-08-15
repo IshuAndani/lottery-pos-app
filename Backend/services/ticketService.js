@@ -10,9 +10,9 @@ const crypto = require('crypto');
 
 
 const generateTicketId = () => {
-  const timestamp = Date.now().toString(36); // Convert timestamp to base36 for shorter string
-  const randomStr = crypto.randomBytes(4).toString('hex'); // Generate 8 random characters
-  return `${timestamp}-${randomStr}`.toUpperCase().slice(0, 10); // Combine and limit to 10 characters
+  const timestamp = Date.now().toString(36); 
+  const randomStr = crypto.randomBytes(4).toString('hex');
+  return `${timestamp}${randomStr}`.toUpperCase().slice(0, 10);
 };
 
 exports.sellTicket = async (lotteryId, agentId, bets, period) => {
