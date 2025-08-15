@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { getLotteryById, getOpenLotteries } from '../../api';
+import { getLotteryById, getOpenLotteries, getCurrentUser } from '../../api';
 import TicketGrid from '../../components/agent/TicketGrid';
 import BettingSlip from '../../components/agent/BettingSlip';
 import TicketReceipt from '../../components/agent/TicketResult';
@@ -27,6 +27,7 @@ const SellTicketPage = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
   const [print, setPrint] = useState(true);
+  const [agentName, setAgentName] = useState('');
   const { t } = useTranslation();
   const billRef = useRef(null);
 
@@ -42,6 +43,10 @@ const SellTicketPage = () => {
           return bIsGeorgia - aIsGeorgia;
         });
         setAllLotteries(sorted);
+
+        // Fetch current user to get agent's name
+        const user = await getCurrentUser();
+        setAgentName(user.name || 'Unknown Agent');
 
         let targetLottery = null;
         let targetState = '';
@@ -80,8 +85,8 @@ const SellTicketPage = () => {
           setError('No valid lottery found.');
         }
       } catch (err) {
-        console.error('Error fetching lotteries:', err);
-        setError('Failed to load lotteries.');
+        console.error('Error fetching lotteries or user:', err);
+        setError('Failed to load lotteries or user data.');
       } finally {
         setLoading(false);
       }
@@ -110,12 +115,18 @@ const SellTicketPage = () => {
     );
   };
 
+  const handleClearSelectedNumbers = () => {
+    console.log('Clearing selected numbers...');
+    setSelectedNumbers([]);
+  };
+
   const handleTicketSold = (ticket) => {
     setLastSoldTicket({ 
       ...ticket, 
       state: selectedStateName,
       lottery: lottery,
-      period: selectedPeriod
+      period: selectedPeriod,
+      agentName: agentName
     });
     setShowReceipt(true);
     setShowSuccess(true);
@@ -151,10 +162,11 @@ const SellTicketPage = () => {
       const htmlContent = printBill.innerHTML;
       const receiptData = {
         ticketId: lastSoldTicket.ticketId,
-        date: new Date(lastSoldTicket.createdAt).toLocaleString(),
+        date: new Date(lastSoldTicket.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York' }),
         state: lastSoldTicket.state || selectedStateName,
         lottery: lastSoldTicket.lottery?.name || lottery?.name,
         period: lastSoldTicket.period || selectedPeriod,
+        agentName: lastSoldTicket.agentName || agentName,
         bets: lastSoldTicket.bets.map((bet, idx) => ({
           betType: bet.betType,
           numbers: bet.numbers,
@@ -162,8 +174,9 @@ const SellTicketPage = () => {
           state: bet.betType === 'bolet' || bet.betType === 'mariage' ? 'haiti' : bet.state || selectedStateName,
           displayText: bet.betType === 'mariage' && bet.numbers.length === 2 
             ? `${bet.numbers[0]} X ${bet.numbers[1]} ($${Number(bet.amounts[0]).toFixed(2)})`
-            : bet.numbers.map((num, i) => `${num} ($${Number(bet.amounts[i]).toFixed(2)})`).join(', ') + 
-              (['play3', 'play4'].includes(bet.betType) ? ` (${bet.state || selectedStateName})` : '')
+            : bet.betType === 'play3' || bet.betType === 'play4'
+            ? `${bet.numbers[0]} X $${Number(bet.amounts[0]).toFixed(2)} (${bet.state || selectedStateName})`
+            : bet.numbers.map((num, i) => `${num} ($${Number(bet.amounts[i]).toFixed(2)})`).join(', ')
         })),
         totalAmount: lastSoldTicket.totalAmount,
       };
@@ -270,6 +283,9 @@ const SellTicketPage = () => {
                 <strong>{t('ticket_id')}:</strong> {lastSoldTicket.ticketId}
               </p>
               <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                <strong>{t('agent')}:</strong> {lastSoldTicket.agentName || agentName}
+              </p>
+              <p style={{ margin: '5px 0', fontSize: '14px' }}>
                 <strong>{t('state')}:</strong> {lastSoldTicket.state || selectedStateName}
               </p>
               <p style={{ margin: '5px 0', fontSize: '14px' }}>
@@ -300,6 +316,8 @@ const SellTicketPage = () => {
                   <p style={{ margin: '2px 0', fontSize: '12px' }}>
                     {t('numbers')}: {bet.betType === 'mariage' && bet.numbers.length === 2 
                       ? `${bet.numbers[0]} X ${bet.numbers[1]} ($${Number(bet.amounts[0]).toFixed(2)})`
+                      : bet.betType === 'play3' || bet.betType === 'play4'
+                      ? `${bet.numbers[0]} X $${Number(bet.amounts[0]).toFixed(2)} (${bet.state || selectedStateName})`
                       : bet.numbers.map((num, i) => `${num} ($${Number(bet.amounts[i]).toFixed(2)})`).join(', ')
                     }
                   </p>
@@ -395,6 +413,7 @@ const SellTicketPage = () => {
             onTicketSold={handleTicketSold}
             period={selectedPeriod}
             lottery={lottery}
+            onClearSelectedNumbers={handleClearSelectedNumbers}
           />
         </div>
       </div>

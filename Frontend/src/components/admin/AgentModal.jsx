@@ -47,31 +47,31 @@ const AgentModal = ({ isOpen, onClose, agent, onSave }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
       <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md sm:max-w-lg md:max-w-xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl sm:text-2xl font-bold mb-6">{agent ? 'Edit Agent' : 'Create New Agent'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Commission Rate (%)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Commission Rate (%)</label>
             <input
               type="number"
               name="commissionRate"
@@ -81,16 +81,16 @@ const AgentModal = ({ isOpen, onClose, agent, onSave }) => {
               min="0"
               max="100"
               step="0.1"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             >
               <option value="active">Active</option>
               <option value="deactivated">Deactivated</option>
@@ -101,14 +101,14 @@ const AgentModal = ({ isOpen, onClose, agent, onSave }) => {
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded hover:bg-gray-300 text-sm sm:text-base w-full sm:w-auto"
+              className="bg-gray-200 text-gray-800 font-bold py-3 px-6 rounded hover:bg-gray-300 text-base w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-purple-600 text-white font-bold py-2 px-4 rounded hover:bg-purple-700 disabled:bg-gray-400 text-sm sm:text-base w-full sm:w-auto"
+              className="bg-purple-600 text-white font-bold py-3 px-6 rounded hover:bg-purple-700 disabled:bg-gray-400 text-base w-full sm:w-auto"
             >
               {isSubmitting ? 'Saving...' : 'Save'}
             </button>

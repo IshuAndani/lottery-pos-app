@@ -5,7 +5,8 @@ import axios from 'axios';
  * This instance will be used for all API requests throughout the application.
  */
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
+  // baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lottery-pos-app-bel1.onrender.com/api/v1',
 });
 
 // Add a request interceptor to attach the JWT token from localStorage
@@ -138,6 +139,24 @@ export const getAgentReport = async (params) => {
   }
 };
 
+export const getAgentTicketsReport = async (params = {}) => {
+  try {
+    const response = await apiClient.get('/reports/admin/agent-tickets', { params });
+    return response.data.data.report;
+  } catch (error) {
+    throw error.response.data || new Error('Failed to fetch agent tickets report');
+  }
+};
+
+export const getTicketsSoldByDate = async (params = {}) => {
+  try {
+    const response = await apiClient.get('/reports/admin/tickets-sold', { params });
+    return response.data.data.report;
+  } catch (error) {
+    throw error.response.data || new Error('Failed to fetch tickets sold report');
+  }
+};
+
 /**
  * ADMIN API CALLS
  */
@@ -223,16 +242,16 @@ export const declareWinners = async (lotteryId, winningNumbers) => {
   }
 };
 
-export const getLotteryFinancials = async (lotteryId) => {
+export const getLotteryFinancials = async (lotteryId, params = {}) => {
   try {
-    const response = await apiClient.get(`/reports/admin/lottery/${lotteryId}`);
+    const response = await apiClient.get(`/reports/admin/lottery/${lotteryId}`, { params });
     return response.data.data.report;
   } catch (error) {
     throw error.response.data || new Error('Failed to fetch lottery financials');
   }
 };
 
-export const getSystemSummary = async (params) => {
+export const getSystemSummary = async (params = {}) => {
   try {
     const response = await apiClient.get('/reports/admin/summary', { params });
     return response.data.data.report;

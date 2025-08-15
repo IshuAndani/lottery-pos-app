@@ -29,9 +29,9 @@ const ManageLotteriesPage = () => {
     fetchLotteries();
   }, []);
 
-  const handleSaveLottery = async (formData) => {
+  const handleSaveLottery = async (lotteryId, formData) => {
     try {
-      await createLottery(formData);
+      await createLottery(formData); // Ensure formData is passed directly
       await fetchLotteries();
       setIsCreateModalOpen(false);
     } catch (err) {
@@ -41,7 +41,11 @@ const ManageLotteriesPage = () => {
 
   const handleEditLottery = async (lotteryId, formData) => {
     try {
-      await updateLottery(lotteryId, formData);
+      if (lotteryId) {
+        await updateLottery(lotteryId, formData); // Ensure formData is passed directly
+      } else {
+        await createLottery(formData); // Fallback for create if no ID
+      }
       await fetchLotteries();
       setIsEditModalOpen(false);
       setSelectedLottery(null);
@@ -104,7 +108,12 @@ const ManageLotteriesPage = () => {
           <p className="text-sm text-gray-500 mt-1">Draw: {new Date(lottery.drawDate).toLocaleString()}</p>
           <p className="mt-2">Tickets Sold: {lottery.ticketsSold}</p>
           <p className="mt-2">Available in: {lottery.states.join(', ')}</p>
-          <p className="mt-2">Payout Multipliers: Bolet: {lottery.payoutRules.bolet}, Mariage: {lottery.payoutRules.mariage}</p>
+          <p className="mt-2">
+            Payout Multipliers: Bolet: {lottery.payoutRules.bolet}, 
+            Mariage: {lottery.payoutRules.mariage}, 
+            Play3: {lottery.payoutRules.play3}, 
+            Play4: {lottery.payoutRules.play4}
+          </p>
           {lottery.status === 'completed' && (
             <p className="font-semibold mt-2">Winners: {lottery.winningNumbers.join(', ')}</p>
           )}

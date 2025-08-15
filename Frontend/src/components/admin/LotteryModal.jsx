@@ -9,11 +9,14 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
     'validNumberRange.max': 99,
     'payoutRules.bolet': 50,
     'payoutRules.mariage': 1000,
+    'payoutRules.play3': 500,
+    'payoutRules.play4': 2000,
     states: [],
     maxPerNumber: 50,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [stateSearch, setStateSearch] = useState('');
 
   // Sample list of US states (lowercase to match backend)
   const usStates = [
@@ -26,6 +29,8 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
     'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming'
   ];
 
+  const filteredStates = usStates.filter(state => state.toLowerCase().includes(stateSearch.toLowerCase()));
+
   useEffect(() => {
     if (lottery) {
       setFormData({
@@ -36,10 +41,13 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
         'validNumberRange.max': lottery.validNumberRange?.max ?? 99,
         'payoutRules.bolet': lottery.payoutRules?.bolet ?? 50,
         'payoutRules.mariage': lottery.payoutRules?.mariage ?? 1000,
+        'payoutRules.play3': lottery.payoutRules?.play3 ?? 500,
+        'payoutRules.play4': lottery.payoutRules?.play4 ?? 2000,
         states: lottery.states || [],
         maxPerNumber: lottery.maxPerNumber ?? 50,
       });
     }
+    setStateSearch('');
   }, [lottery]);
 
   const handleChange = (e) => {
@@ -76,7 +84,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
       setError('Number of winning numbers must be positive.');
       return;
     }
-    if (Number(formData['payoutRules.bolet']) <= 0 || Number(formData['payoutRules.mariage']) <= 0) {
+    if (Number(formData['payoutRules.bolet']) <= 0 || Number(formData['payoutRules.mariage']) <= 0 || Number(formData['payoutRules.play3']) <= 0 || Number(formData['payoutRules.play4']) <= 0) {
       setError('Payout multipliers must be positive.');
       return;
     }
@@ -94,6 +102,8 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
       payoutRules: {
         bolet: Number(formData['payoutRules.bolet']),
         mariage: Number(formData['payoutRules.mariage']),
+        play3: Number(formData['payoutRules.play3']),
+        play4: Number(formData['payoutRules.play4']),
       },
       states: formData.states,
       maxPerNumber: Number(formData.maxPerNumber),
@@ -112,33 +122,33 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 sm:p-6">
-      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-lg sm:max-w-md overflow-y-auto max-h-[90vh]">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md sm:max-w-lg md:max-w-xl overflow-y-auto max-h-[90vh]">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">{lottery ? 'Edit Lottery' : 'Create New Lottery'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Lottery Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Lottery Name</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Draw Date & Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Draw Date & Time</label>
             <input
               type="datetime-local"
               name="drawDate"
               value={formData.drawDate}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Number of Winning Numbers</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Number of Winning Numbers</label>
             <input
               type="number"
               name="numberOfWinningNumbers"
@@ -146,11 +156,11 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData.numberOfWinningNumbers}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Valid Number Range (Min)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Valid Number Range (Min)</label>
             <input
               type="number"
               name="validNumberRange.min"
@@ -158,11 +168,11 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               onChange={handleChange}
               required
               disabled={lottery && lottery.ticketsSold > 0}
-              className="mt-mount w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Valid Number Range (Max)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Valid Number Range (Max)</label>
             <input
               type="number"
               name="validNumberRange.max"
@@ -170,11 +180,11 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               onChange={handleChange}
               required
               disabled={lottery && lottery.ticketsSold > 0}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Max Tickets Per Number</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Max Tickets Per Number</label>
             <input
               type="number"
               name="maxPerNumber"
@@ -183,11 +193,11 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               onChange={handleChange}
               required
               disabled={lottery && lottery.ticketsSold > 0}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Bolet Payout Multiplier (e.g., 50x)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Bolet Payout Multiplier (e.g., 50x)</label>
             <input
               type="number"
               name="payoutRules.bolet"
@@ -196,11 +206,11 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               onChange={handleChange}
               required
               disabled={lottery && lottery.ticketsSold > 0}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Mariage Payout Multiplier (e.g., 1000x)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Mariage Payout Multiplier (e.g., 1000x)</label>
             <input
               type="number"
               name="payoutRules.mariage"
@@ -209,26 +219,63 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               onChange={handleChange}
               required
               disabled={lottery && lottery.ticketsSold > 0}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Available States</label>
-            <div className="mt-1 max-h-40 overflow-y-auto border border-gray-300 rounded-md p-2">
-              {usStates.map((state) => (
-                <div key={state} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={state}
-                    value={state}
-                    checked={formData.states.includes(state)}
-                    onChange={() => handleStateToggle(state)}
-                    disabled={lottery && lottery.ticketsSold > 0}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded disabled:cursor-not-allowed"
-                  />
-                  <label htmlFor={state} className="ml-2 text-sm text-gray-700 capitalize">{state}</label>
-                </div>
-              ))}
+            <label className="block text-sm font-medium text-gray-700 mb-2">Play3 Payout Multiplier (e.g., 500x)</label>
+            <input
+              type="number"
+              name="payoutRules.play3"
+              min="1"
+              value={formData['payoutRules.play3']}
+              onChange={handleChange}
+              required
+              disabled={lottery && lottery.ticketsSold > 0}
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Play4 Payout Multiplier (e.g., 2000x)</label>
+            <input
+              type="number"
+              name="payoutRules.play4"
+              min="1"
+              value={formData['payoutRules.play4']}
+              onChange={handleChange}
+              required
+              disabled={lottery && lottery.ticketsSold > 0}
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Available States</label>
+            <input
+              type="text"
+              placeholder="Search states..."
+              value={stateSearch}
+              onChange={(e) => setStateSearch(e.target.value)}
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base mb-3 touch-manipulation"
+            />
+            <div className="max-h-60 overflow-y-auto border-2 border-gray-400 rounded-md p-2 space-y-2">
+              {filteredStates.length === 0 ? (
+                <p className="text-sm text-gray-500">No states found.</p>
+              ) : (
+                filteredStates.map((state) => (
+                  <div key={state} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={state}
+                      value={state}
+                      checked={formData.states.includes(state)}
+                      onChange={() => handleStateToggle(state)}
+                      disabled={lottery && lottery.ticketsSold > 0}
+                      className="h-5 w-5 text-purple-600 focus:ring-2 focus:ring-purple-500 border-2 border-gray-400 rounded disabled:cursor-not-allowed"
+                    />
+                    <label htmlFor={state} className="ml-3 text-base text-gray-700 capitalize">{state}</label>
+                  </div>
+                ))
+              )}
             </div>
             {formData.states.length === 0 && error.includes('state') && (
               <p className="text-red-500 text-sm mt-1">{error}</p>
@@ -242,18 +289,18 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
           {error && !error.includes('state') && (
             <p className="text-red-500 text-sm mt-4">{error}</p>
           )}
-          <div className="mt-6 flex justify-end gap-4">
+          <div className="mt-6 flex flex-col sm:flex-row justify-end gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded hover:bg-gray-300 transition-colors"
+              className="bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded hover:bg-gray-300 transition-colors w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-purple-600 text-white font-medium py-2 px-4 rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="bg-purple-600 text-white font-medium py-3 px-6 rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors w-full sm:w-auto"
             >
               {isSubmitting ? 'Saving...' : lottery ? 'Update Lottery' : 'Create Lottery'}
             </button>
