@@ -54,14 +54,6 @@ exports.updateLottery = async (lotteryId, updateData) => {
     throw new ApiError(400, 'numberOfWinningNumbers must be a positive integer.');
   }
 
-  // Check if tickets exist for this lottery
-  const ticketCount = await Ticket.countDocuments({ lottery: lotteryId });
-  if (ticketCount > 0) {
-    // Prevent changes to critical fields if tickets exist
-    if (updates.validNumberRange || updates.maxPerNumber || updates.payoutRules || updates.states) {
-      throw new ApiError(400, 'Cannot update validNumberRange, maxPerNumber, payoutRules, or states when tickets have been sold.');
-    }
-  }
   //if lottery date in future then change status to open
   if (updates.drawDate && new Date(updates.drawDate) > new Date()) {
     updates.status = 'open';
