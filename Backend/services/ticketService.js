@@ -63,6 +63,17 @@ exports.sellTicket = async (lotteryId, agentId, bets, period) => {
     if (bet.amounts.some(amt => isNaN(amt) || amt <= 0)) {
       throw new ApiError(400, `All amounts must be positive numbers.`);
     }
+    // Enforce per-bet-type min/max from lottery.betLimits
+    const limits = lottery.betLimits && lottery.betLimits[bet.betType];
+    if (limits) {
+      const amount = Number(bet.amounts[0]);
+      if (amount < limits.min) {
+        throw new ApiError(400, `${bet.betType} minimum is $${limits.min}.`);
+      }
+      if (amount > limits.max) {
+        throw new ApiError(400, `${bet.betType} maximum is $${limits.max}.`);
+      }
+    }
     // Validate state for play3 and play4
     if (['play3', 'play4'].includes(bet.betType) && !lottery.states.includes(bet.state)) {
       throw new ApiError(400, `Invalid state for ${bet.betType}: ${bet.state}. Must be one of ${lottery.states.join(', ')}.`);
@@ -109,7 +120,9 @@ exports.sellTicket = async (lotteryId, agentId, bets, period) => {
     throw new ApiError(400, `Agent with ID ${agentId} not found.`);
   }
   const totalAmount = bets.reduce((sum, bet) => sum + bet.amounts.reduce((acc, amt) => acc + (amt || 0), 0), 0);
-  const commissionAmount = totalAmount * (agent.commissionRate / 100);
+  // Clamp commissionRate to [0, 100]
+  const safeCommissionRate = Math.max(0, Math.min(100, Number(agent.commissionRate) || 0));
+  const commissionAmount = totalAmount * (safeCommissionRate / 100);
   const netOwedToAdmin = totalAmount - commissionAmount;
 
   let newTicket;

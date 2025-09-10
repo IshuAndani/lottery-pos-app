@@ -20,6 +20,18 @@ const lotterySchema = new mongoose.Schema({
     required: true,
     default: { bolet: 50, mariage: 1000, play3: 500, play4: 5000 }
   },
+  // Per-bet-type min/max limits for wager amounts
+  // Example: { bolet: { min: 1, max: 100 }, mariage: { min: 1, max: 25 } }
+  betLimits: {
+    type: Object,
+    required: false,
+    default: {
+      bolet: { min: 1, max: 100 },
+      mariage: { min: 1, max: 25 },
+      play3: { min: 1, max: 25 },
+      play4: { min: 1, max: 20 },
+    },
+  },
   // A simple array of winning numbers declared by the admin.
   winningNumbers: {
     type: [String],

@@ -32,7 +32,8 @@ exports.updateLottery = async (lotteryId, updateData) => {
     'maxPerNumber',
     'numberOfWinningNumbers',
     'payoutRules',
-    'states'
+    'states',
+    'betLimits'
   ];
   const updates = {};
   for (const key of allowedUpdates) {
