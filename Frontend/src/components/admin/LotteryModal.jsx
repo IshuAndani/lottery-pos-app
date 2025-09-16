@@ -13,6 +13,14 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
     'payoutRules.play4': 2000,
     states: [],
     maxPerNumber: 50,
+    'betLimits.bolet.min': 1,
+    'betLimits.bolet.max': 100,
+    'betLimits.mariage.min': 1,
+    'betLimits.mariage.max': 25,
+    'betLimits.play3.min': 1,
+    'betLimits.play3.max': 25,
+    'betLimits.play4.min': 1,
+    'betLimits.play4.max': 20,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -45,6 +53,14 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
         'payoutRules.play4': lottery.payoutRules?.play4 ?? 2000,
         states: lottery.states || [],
         maxPerNumber: lottery.maxPerNumber ?? 50,
+        'betLimits.bolet.min': lottery.betLimits?.bolet?.min ?? 1,
+        'betLimits.bolet.max': lottery.betLimits?.bolet?.max ?? 100,
+        'betLimits.mariage.min': lottery.betLimits?.mariage?.min ?? 1,
+        'betLimits.mariage.max': lottery.betLimits?.mariage?.max ?? 25,
+        'betLimits.play3.min': lottery.betLimits?.play3?.min ?? 1,
+        'betLimits.play3.max': lottery.betLimits?.play3?.max ?? 25,
+        'betLimits.play4.min': lottery.betLimits?.play4?.min ?? 1,
+        'betLimits.play4.max': lottery.betLimits?.play4?.max ?? 20,
       });
     }
     setStateSearch('');
@@ -77,12 +93,24 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
       return;
     }
     if (Number(formData.maxPerNumber) <= 0) {
-      setError('Max tickets per number must be positive.');
+      setError('Max price per number must be positive.');
       return;
     }
     if (Number(formData.numberOfWinningNumbers) <= 0) {
       setError('Number of winning numbers must be positive.');
       return;
+    }
+    const bl = {
+      bolet: { min: Number(formData['betLimits.bolet.min']), max: Number(formData['betLimits.bolet.max']) },
+      mariage: { min: Number(formData['betLimits.mariage.min']), max: Number(formData['betLimits.mariage.max']) },
+      play3: { min: Number(formData['betLimits.play3.min']), max: Number(formData['betLimits.play3.max']) },
+      play4: { min: Number(formData['betLimits.play4.min']), max: Number(formData['betLimits.play4.max']) },
+    };
+    for (const key of Object.keys(bl)) {
+      if (isNaN(bl[key].min) || isNaN(bl[key].max) || bl[key].min < 0 || bl[key].max < bl[key].min) {
+        setError('Bet limits must be valid numbers and max >= min.');
+        return;
+      }
     }
     if (Number(formData['payoutRules.bolet']) <= 0 || Number(formData['payoutRules.mariage']) <= 0 || Number(formData['payoutRules.play3']) <= 0 || Number(formData['payoutRules.play4']) <= 0) {
       setError('Payout multipliers must be positive.');
@@ -107,6 +135,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
       },
       states: formData.states,
       maxPerNumber: Number(formData.maxPerNumber),
+      betLimits: bl,
     };
 
     try {
@@ -167,8 +196,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData['validNumberRange.min']}
               onChange={handleChange}
               required
-              disabled={lottery && lottery.ticketsSold > 0}
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
@@ -179,12 +207,11 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData['validNumberRange.max']}
               onChange={handleChange}
               required
-              disabled={lottery && lottery.ticketsSold > 0}
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Max Tickets Per Number</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Max Price Per Number</label>
             <input
               type="number"
               name="maxPerNumber"
@@ -192,8 +219,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData.maxPerNumber}
               onChange={handleChange}
               required
-              disabled={lottery && lottery.ticketsSold > 0}
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
@@ -205,8 +231,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData['payoutRules.bolet']}
               onChange={handleChange}
               required
-              disabled={lottery && lottery.ticketsSold > 0}
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
@@ -218,8 +243,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData['payoutRules.mariage']}
               onChange={handleChange}
               required
-              disabled={lottery && lottery.ticketsSold > 0}
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
@@ -231,8 +255,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData['payoutRules.play3']}
               onChange={handleChange}
               required
-              disabled={lottery && lottery.ticketsSold > 0}
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
@@ -244,8 +267,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               value={formData['payoutRules.play4']}
               onChange={handleChange}
               required
-              disabled={lottery && lottery.ticketsSold > 0}
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
             />
           </div>
           <div>
@@ -269,8 +291,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
                       value={state}
                       checked={formData.states.includes(state)}
                       onChange={() => handleStateToggle(state)}
-                      disabled={lottery && lottery.ticketsSold > 0}
-                      className="h-5 w-5 text-purple-600 focus:ring-2 focus:ring-purple-500 border-2 border-gray-400 rounded disabled:cursor-not-allowed"
+                      className="h-5 w-5 text-purple-600 focus:ring-2 focus:ring-purple-500 border-2 border-gray-400 rounded"
                     />
                     <label htmlFor={state} className="ml-3 text-base text-gray-700 capitalize">{state}</label>
                   </div>
@@ -281,11 +302,6 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               <p className="text-red-500 text-sm mt-1">{error}</p>
             )}
           </div>
-          {lottery && lottery.ticketsSold > 0 && (
-            <p className="text-yellow-600 text-sm mt-2">
-              Note: Fields affecting bets (number range, max per number, payout rules, states) cannot be edited as tickets have been sold.
-            </p>
-          )}
           {error && !error.includes('state') && (
             <p className="text-red-500 text-sm mt-4">{error}</p>
           )}

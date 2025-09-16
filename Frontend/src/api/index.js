@@ -5,8 +5,8 @@ import axios from 'axios';
  * This instance will be used for all API requests throughout the application.
  */
 const apiClient = axios.create({
-  // baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lottery-pos-app-bel1.onrender.com/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
+  // baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lottery-pos-app-bel1.onrender.com/api/v1',
 });
 
 // Add a request interceptor to attach the JWT token from localStorage
@@ -136,6 +136,15 @@ export const getAgentReport = async (params) => {
     return response.data.data.report;
   } catch (error) {
     throw error.response.data || new Error('Failed to fetch agent report');
+  }
+};
+
+export const getAgentRecentTickets = async (params = {}) => {
+  try {
+    const response = await apiClient.get('/reports/agent/recent-tickets', { params });
+    return response.data.data.tickets;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to fetch recent tickets');
   }
 };
 

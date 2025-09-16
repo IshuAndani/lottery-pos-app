@@ -41,4 +41,10 @@ router.get(
   reportController.getAgentReport
 );
 
+router.get(
+  '/agent/recent-tickets',
+  restrictTo('agent'),
+  reportController.getAgentRecentTickets
+);
+
 module.exports = router;

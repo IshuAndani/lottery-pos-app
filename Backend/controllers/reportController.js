@@ -37,3 +37,9 @@ exports.getAgentReport = asyncHandler(async (req, res, next) => {
   const report = await reportService.getAgentDashboard(req.user.id, req.query);
   res.status(200).json({ status: 'success', data: { report } });
 });
+
+exports.getAgentRecentTickets = asyncHandler(async (req, res, next) => {
+  const { limit } = req.query;
+  const tickets = await reportService.getAgentRecentTickets(req.user.id, limit || 10);
+  res.status(200).json({ status: 'success', data: { tickets } });
+});

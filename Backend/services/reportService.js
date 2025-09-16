@@ -180,6 +180,10 @@ exports.getAgentDashboard = async (agentId, query) => {
   ]);
 
   const soldTicketsCount = await Ticket.countDocuments(matchFilter);
+  const salesAgg = await Ticket.aggregate([
+    { $match: matchFilter },
+    { $group: { _id: null, totalSalesAmount: { $sum: '$totalAmount' } } }
+  ]);
 
   let totalCommissions = 0;
   let totalPayouts = 0;
@@ -193,7 +197,26 @@ exports.getAgentDashboard = async (agentId, query) => {
     currentBalance: agent.balance,
     period: (startDate && endDate) ? { startDate, endDate } : 'Overall',
     soldTicketsCount,
+    totalSalesAmount: salesAgg[0]?.totalSalesAmount || 0,
     totalCommissions,
     totalPayouts,
   };
+};
+
+// Recent tickets for a single agent
+exports.getAgentRecentTickets = async (agentId, limit = 10) => {
+  const tickets = await Ticket.find({ agent: agentId, status: { $ne: 'void' } })
+    .populate('lottery', 'name')
+    .sort({ createdAt: -1 })
+    .limit(parseInt(limit))
+    .lean();
+
+  return tickets.map(ticket => ({
+    ticketId: ticket.ticketId,
+    lotteryName: ticket.lottery?.name || 'Unknown',
+    totalAmount: ticket.totalAmount,
+    createdAt: ticket.createdAt,
+    status: ticket.status,
+    period: ticket.period,
+  }));
 };

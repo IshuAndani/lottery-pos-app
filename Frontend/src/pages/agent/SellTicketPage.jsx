@@ -167,6 +167,7 @@ const SellTicketPage = () => {
         lottery: lastSoldTicket.lottery?.name || lottery?.name,
         period: lastSoldTicket.period || selectedPeriod,
         agentName: lastSoldTicket.agentName || agentName,
+        agentId: lastSoldTicket.agent || lastSoldTicket.agentId || 'N/A',
         bets: lastSoldTicket.bets.map((bet, idx) => ({
           betType: bet.betType,
           numbers: bet.numbers,

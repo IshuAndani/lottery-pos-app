@@ -25,25 +25,63 @@ const AgentNavbar = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
+              <img
+                src="/gabel_bolet.jpg"
+                alt="Gabel Bolet Logo"
+                className="h-10 w-auto mr-4 object-contain"
+              />
               <span className="font-bold text-xl">Agent Panel</span>
               {/* Desktop Nav Links */}
               <div className="hidden md:block">
                 <div className="ml-10 flex items-baseline space-x-4">
-                  <NavLink to="/" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700" style={({ isActive }) => isActive ? activeLinkStyle : undefined} end>Dashboard</NavLink>
-                  <NavLink to="/lotteries" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700" style={({ isActive }) => isActive ? activeLinkStyle : undefined}>Open Lotteries</NavLink>
-                  <NavLink to="/check-ticket" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700" style={({ isActive }) => isActive ? activeLinkStyle : undefined}>Check Ticket</NavLink>
-                  <NavLink to="/reports" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700" style={({ isActive }) => isActive ? activeLinkStyle : undefined}>Reports</NavLink>
+                  <NavLink
+                    to="/"
+                    className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                    style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                    end
+                  >
+                    Dashboard
+                  </NavLink>
+                  <NavLink
+                    to="/lotteries"
+                    className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                    style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                  >
+                    Open Lotteries
+                  </NavLink>
+                  <NavLink
+                    to="/check-ticket"
+                    className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                    style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                  >
+                    Check Ticket
+                  </NavLink>
+                  <NavLink
+                    to="/reports"
+                    className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                    style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                  >
+                    Reports
+                  </NavLink>
                 </div>
               </div>
             </div>
             {/* Desktop Actions */}
             <div className="hidden md:block">
               <div className="ml-4 flex items-center md:ml-6">
-                <button onClick={() => setIsPrinterModalOpen(true)} className="text-sm mr-4 p-2 rounded-md hover:bg-blue-700">
+                <button
+                  onClick={() => setIsPrinterModalOpen(true)}
+                  className="text-sm mr-4 p-2 rounded-md hover:bg-blue-700"
+                >
                   Printer: {selectedPrinter ? selectedPrinter.name : 'None'}
                 </button>
                 <span className="mr-3">Welcome, {user?.name}</span>
-                <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                >
+                  Logout
+                </button>
               </div>
             </div>
             {/* Hamburger for Mobile */}
@@ -55,9 +93,19 @@ const AgentNavbar = () => {
               >
                 <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                   {mobileMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
                   )}
                 </svg>
               </button>
@@ -67,13 +115,66 @@ const AgentNavbar = () => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-blue-700 px-2 pt-2 pb-3 space-y-1">
-            <NavLink to="/" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800" style={({ isActive }) => isActive ? activeLinkStyle : undefined} end onClick={() => setMobileMenuOpen(false)}>Dashboard</NavLink>
-            <NavLink to="/lotteries" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800" style={({ isActive }) => isActive ? activeLinkStyle : undefined} onClick={() => setMobileMenuOpen(false)}>Open Lotteries</NavLink>
-            <NavLink to="/check-ticket" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800" style={({ isActive }) => isActive ? activeLinkStyle : undefined} onClick={() => setMobileMenuOpen(false)}>Check Ticket</NavLink>
-            <NavLink to="/reports" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800" style={({ isActive }) => isActive ? activeLinkStyle : undefined} onClick={() => setMobileMenuOpen(false)}>Reports</NavLink>
-            <button onClick={() => { setIsPrinterModalOpen(true); setMobileMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800">Printer: {selectedPrinter ? selectedPrinter.name : 'None'}</button>
+            <div className="flex items-center px-3 py-2">
+              <img
+                src="/gabel_bolet.jpg"
+                alt="Gabel Bolet Logo"
+                className="h-8 w-auto mr-2 object-contain"
+              />
+              <span className="font-bold text-lg">Agent Panel</span>
+            </div>
+            <NavLink
+              to="/"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800"
+              style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+              end
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Dashboard
+            </NavLink>
+            <NavLink
+              to="/lotteries"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800"
+              style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Open Lotteries
+            </NavLink>
+            <NavLink
+              to="/check-ticket"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800"
+              style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Check Ticket
+            </NavLink>
+            <NavLink
+              to="/reports"
+              className="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800"
+              style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Reports
+            </NavLink>
+            <button
+              onClick={() => {
+                setIsPrinterModalOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-blue-800"
+            >
+              Printer: {selectedPrinter ? selectedPrinter.name : 'None'}
+            </button>
             <span className="block px-3 py-2 text-base">Welcome, {user?.name}</span>
-            <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="block w-full text-left bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mt-2">Logout</button>
+            <button
+              onClick={() => {
+                handleLogout();
+                setMobileMenuOpen(false);
+              }}
+              className="block w-full text-left bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mt-2"
+            >
+              Logout
+            </button>
           </div>
         )}
       </nav>
