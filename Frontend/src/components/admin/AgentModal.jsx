@@ -6,6 +6,7 @@ const AgentModal = ({ isOpen, onClose, agent, onSave }) => {
     email: '',
     commissionRate: 0,
     status: 'active',
+    password: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -17,9 +18,11 @@ const AgentModal = ({ isOpen, onClose, agent, onSave }) => {
         email: agent.email || '',
         commissionRate: agent.commissionRate || 0,
         status: agent.status || 'active',
+        // Do not prefill password in edit mode
+        password: '',
       });
     } else {
-      setFormData({ name: '', email: '', commissionRate: 0, status: 'active' });
+      setFormData({ name: '', email: '', commissionRate: 0, status: 'active', password: '' });
     }
   }, [agent, isOpen]);
 
@@ -96,6 +99,20 @@ const AgentModal = ({ isOpen, onClose, agent, onSave }) => {
               <option value="deactivated">Deactivated</option>
             </select>
           </div>
+          {!agent && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                minLength={6}
+                className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
+              />
+            </div>
+          )}
           {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
           <div className="mt-6 flex flex-col sm:flex-row justify-end gap-4">
             <button

@@ -19,4 +19,7 @@ router.get('/:id/sold-numbers', lotteryController.getSoldNumbers);
 
 router.post('/:id/declare-winners', restrictTo('admin'), lotteryController.declareWinners);
 
+// Admin-only endpoint to recalculate winners for a completed lottery using existing winning numbers
+router.post('/:id/recalculate-winners', restrictTo('admin'), lotteryController.recalculateWinners);
+
 module.exports = router;

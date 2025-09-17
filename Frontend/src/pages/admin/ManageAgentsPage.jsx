@@ -89,7 +89,14 @@ const ManageAgentsPage = () => {
       if (selectedAgentForEdit) {
         await updateAgent(selectedAgentForEdit._id, formData);
       } else {
-        await createAgent(formData);
+        // Ensure password is included only on create
+        await createAgent({
+          name: formData.name,
+          email: formData.email,
+          commissionRate: formData.commissionRate,
+          status: formData.status,
+          password: formData.password,
+        });
       }
       await fetchAgents();
       setIsEditModalOpen(false);

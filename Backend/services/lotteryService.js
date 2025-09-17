@@ -44,8 +44,34 @@ exports.updateLottery = async (lotteryId, updateData) => {
 
   // Validate updates
   if (updates.validNumberRange) {
-    if (!updates.validNumberRange.min || !updates.validNumberRange.max || updates.validNumberRange.min > updates.validNumberRange.max) {
+    const minNum = Number(updates.validNumberRange.min);
+    const maxNum = Number(updates.validNumberRange.max);
+    const hasMin = updates.validNumberRange.min !== undefined && updates.validNumberRange.min !== null;
+    const hasMax = updates.validNumberRange.max !== undefined && updates.validNumberRange.max !== null;
+    if (!hasMin || !hasMax || isNaN(minNum) || isNaN(maxNum) || minNum > maxNum) {
       throw new ApiError(400, 'Invalid number range: min and max are required, and min must be less than or equal to max.');
+    }
+    updates.validNumberRange = { min: minNum, max: maxNum };
+  }
+  if (updates.maxPerNumber) {
+    // Accept either a number (legacy) or object per bet type
+    if (typeof updates.maxPerNumber === 'number') {
+      const n = Number(updates.maxPerNumber);
+      if (isNaN(n) || n <= 0) {
+        throw new ApiError(400, 'maxPerNumber must be a positive number.');
+      }
+      updates.maxPerNumber = { bolet: n, mariage: n, play3: n, play4: n };
+    } else if (typeof updates.maxPerNumber === 'object') {
+      const keys = ['bolet', 'mariage', 'play3', 'play4'];
+      for (const k of keys) {
+        const v = Number(updates.maxPerNumber[k]);
+        if (isNaN(v) || v <= 0) {
+          throw new ApiError(400, `maxPerNumber.${k} must be a positive number.`);
+        }
+        updates.maxPerNumber[k] = v;
+      }
+    } else {
+      throw new ApiError(400, 'maxPerNumber must be a number or an object with per-type values.');
     }
   }
   if (updates.maxPerNumber && (isNaN(updates.maxPerNumber) || updates.maxPerNumber <= 0)) {
@@ -108,27 +134,94 @@ exports.declareWinningNumbers = async (lotteryId, winningNumbers) => {
   const tickets = await Ticket.find({ lottery: lotteryId });
   const payoutRules = lottery.payoutRules || { bolet: 50, mariage: 1000 };
 
+  // Normalize winning numbers for comparison (handles values like '07' vs '7')
+  const normalizeNumber = (n) => {
+    if (n === null || n === undefined) return '';
+    const trimmed = String(n).trim();
+    if (trimmed === '') return '';
+    const numeric = Number(trimmed);
+    return isNaN(numeric) ? trimmed : String(numeric);
+  };
+  const normalizedWinningSet = new Set((winningNumbers || []).map(normalizeNumber));
+
   // Evaluate each ticket
   for (const ticket of tickets) {
     let isWinner = false;
     let payoutAmount = 0;
     for (const bet of ticket.bets) {
       if (bet.betType === 'bolet') {
-        if (winningNumbers.includes(bet.numbers[0])) {
+        const betNum = normalizeNumber(bet.numbers[0]);
+        if (normalizedWinningSet.has(betNum)) {
           isWinner = true;
           payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('bolet') : payoutRules.bolet);
         }
       } else if (bet.betType === 'mariage') {
         if (
           bet.numbers.length === 2 &&
-          winningNumbers.includes(bet.numbers[0]) &&
-          winningNumbers.includes(bet.numbers[1])
+          normalizedWinningSet.has(normalizeNumber(bet.numbers[0])) &&
+          normalizedWinningSet.has(normalizeNumber(bet.numbers[1]))
         ) {
           isWinner = true;
           payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('mariage') : payoutRules.mariage);
         }
       }
       // Note: play3 and play4 not included in winner evaluation per current logic
+    }
+    ticket.isWinner = isWinner;
+    ticket.payoutAmount = payoutAmount;
+    await ticket.save();
+  }
+
+  return lottery;
+};
+
+// Recalculate winners for an already completed lottery using existing winning numbers
+exports.recalculateWinners = async (lotteryId) => {
+  const lottery = await Lottery.findById(lotteryId);
+  if (!lottery) {
+    throw new ApiError(404, 'Lottery not found.');
+  }
+  if (!lottery.winningNumbers || lottery.winningNumbers.length === 0) {
+    throw new ApiError(400, 'No winning numbers set for this lottery.');
+  }
+
+  const winningNumbers = lottery.winningNumbers;
+
+  // Find all tickets for this lottery
+  const tickets = await Ticket.find({ lottery: lotteryId });
+  const payoutRules = lottery.payoutRules || { bolet: 50, mariage: 1000 };
+
+  // Normalize winning numbers for comparison (handles values like '07' vs '7')
+  const normalizeNumber = (n) => {
+    if (n === null || n === undefined) return '';
+    const trimmed = String(n).trim();
+    if (trimmed === '') return '';
+    const numeric = Number(trimmed);
+    return isNaN(numeric) ? trimmed : String(numeric);
+  };
+  const normalizedWinningSet = new Set((winningNumbers || []).map(normalizeNumber));
+
+  // Evaluate each ticket
+  for (const ticket of tickets) {
+    let isWinner = false;
+    let payoutAmount = 0;
+    for (const bet of ticket.bets) {
+      if (bet.betType === 'bolet') {
+        const betNum = normalizeNumber(bet.numbers[0]);
+        if (normalizedWinningSet.has(betNum)) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('bolet') : payoutRules.bolet);
+        }
+      } else if (bet.betType === 'mariage') {
+        if (
+          bet.numbers.length === 2 &&
+          normalizedWinningSet.has(normalizeNumber(bet.numbers[0])) &&
+          normalizedWinningSet.has(normalizeNumber(bet.numbers[1]))
+        ) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('mariage') : payoutRules.mariage);
+        }
+      }
     }
     ticket.isWinner = isWinner;
     ticket.payoutAmount = payoutAmount;

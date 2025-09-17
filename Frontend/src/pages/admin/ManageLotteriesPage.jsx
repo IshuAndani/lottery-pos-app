@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getAllLotteriesAdmin, createLottery, updateLottery, deleteLottery, declareWinners } from '../../api';
+import { getAllLotteriesAdmin, createLottery, updateLottery, deleteLottery, declareWinners, recalculateWinners } from '../../api';
 import LotteryModal from '../../components/admin/LotteryModal';
 import DeclareWinnersModal from '../../components/admin/DeclareWinnersModal';
 
@@ -76,6 +76,16 @@ const ManageLotteriesPage = () => {
     }
   };
 
+  const handleRecalculateWinners = async (lotteryId) => {
+    try {
+      await recalculateWinners(lotteryId);
+      await fetchLotteries();
+      alert('Winners recalculated successfully.');
+    } catch (err) {
+      setError(err.message || 'Failed to recalculate winners.');
+    }
+  };
+
   const handleOpenEditModal = (lottery) => {
     setSelectedLottery(lottery);
     setIsEditModalOpen(true);
@@ -141,6 +151,14 @@ const ManageLotteriesPage = () => {
                   Delete
                 </button>
               </>
+            )}
+            {lottery.status === 'completed' && (
+              <button
+                onClick={() => handleRecalculateWinners(lottery._id)}
+                className="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded hover:bg-orange-600 transition-colors"
+              >
+                Recalculate Winners
+              </button>
             )}
           </div>
         </div>

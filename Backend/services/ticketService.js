@@ -83,35 +83,45 @@ exports.sellTicket = async (lotteryId, agentId, bets, period) => {
     }
   }
 
-  // Check max per number
-  const betAmounts = {};
+  // Check max per number per bet type
+  const perTypeMax = lottery.maxPerNumber || { bolet: 50, mariage: 50, play3: 50, play4: 50 };
+
+  // Aggregate requested amounts per type+number
+  const requestedByTypeAndNumber = {};
   for (const bet of bets) {
+    const keyBase = bet.betType;
     for (let i = 0; i < bet.numbers.length; i++) {
       const num = bet.numbers[i];
-      const amount = bet.amounts[0]; // Use first amount for all bet types
-      betAmounts[num] = (betAmounts[num] || 0) + amount;
+      const amount = bet.amounts[0];
+      const key = `${keyBase}:${num}`;
+      requestedByTypeAndNumber[key] = (requestedByTypeAndNumber[key] || 0) + amount;
     }
   }
 
+  // Aggregate already sold amounts for this lottery per type+number
   const tickets = await Ticket.find({ lottery: lotteryId });
-  const soldTotals = {};
+  const soldByTypeAndNumber = {};
   for (const ticket of tickets) {
     for (const bet of ticket.bets) {
       if (bet.numbers && Array.isArray(bet.numbers)) {
+        const keyBase = bet.betType;
         for (let i = 0; i < bet.numbers.length; i++) {
           const num = bet.numbers[i];
-          const amount = bet.amounts[0]; // Use first amount for all bet types
-          soldTotals[num] = (soldTotals[num] || 0) + amount;
+          const amount = bet.amounts[0];
+          const key = `${keyBase}:${num}`;
+          soldByTypeAndNumber[key] = (soldByTypeAndNumber[key] || 0) + amount;
         }
       }
     }
   }
 
-  const maxPerNumber = lottery.maxPerNumber || 50;
-  for (const num in betAmounts) {
-    const alreadySold = soldTotals[num] || 0;
-    if (alreadySold + betAmounts[num] > maxPerNumber) {
-      throw new ApiError(400, `Number ${num} is sold out. Only $${maxPerNumber - alreadySold} left.`);
+  for (const key in requestedByTypeAndNumber) {
+    const [betType, num] = key.split(':');
+    const cap = Number(perTypeMax[betType]) || 50;
+    const alreadySold = soldByTypeAndNumber[key] || 0;
+    const requested = requestedByTypeAndNumber[key];
+    if (alreadySold + requested > cap) {
+      throw new ApiError(400, `${betType} number ${num} is sold out. Only $${Math.max(0, cap - alreadySold)} left.`);
     }
   }
 
@@ -196,6 +206,48 @@ exports.checkTicketStatus = async (ticketId) => {
   if (!ticket) {
     throw new ApiError(404, 'No ticket found with that ID.');
   }
+  // If lottery is completed, ensure ticket has up-to-date winner evaluation
+  if (ticket.lottery && ticket.lottery.status === 'completed') {
+    const payoutRules = ticket.lottery.payoutRules || { bolet: 50, mariage: 1000 };
+
+    const normalizeNumber = (n) => {
+      if (n === null || n === undefined) return '';
+      const trimmed = String(n).trim();
+      if (trimmed === '') return '';
+      const numeric = Number(trimmed);
+      return isNaN(numeric) ? trimmed : String(numeric);
+    };
+    const normalizedWinningSet = new Set((ticket.lottery.winningNumbers || []).map(normalizeNumber));
+
+    let isWinner = false;
+    let payoutAmount = 0;
+    for (const bet of ticket.bets) {
+      if (bet.betType === 'bolet') {
+        const betNum = normalizeNumber(bet.numbers[0]);
+        if (normalizedWinningSet.has(betNum)) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('bolet') : payoutRules.bolet);
+        }
+      } else if (bet.betType === 'mariage') {
+        if (
+          bet.numbers.length === 2 &&
+          normalizedWinningSet.has(normalizeNumber(bet.numbers[0])) &&
+          normalizedWinningSet.has(normalizeNumber(bet.numbers[1]))
+        ) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('mariage') : payoutRules.mariage);
+        }
+      }
+    }
+
+    // Persist only if values changed
+    if (ticket.isWinner !== isWinner || ticket.payoutAmount !== payoutAmount) {
+      ticket.isWinner = isWinner;
+      ticket.payoutAmount = payoutAmount;
+      await ticket.save();
+    }
+  }
+
   return ticket;
 };
 

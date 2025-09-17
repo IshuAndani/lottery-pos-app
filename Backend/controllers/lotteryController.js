@@ -104,3 +104,12 @@ exports.getSoldNumbers = asyncHandler(async (req, res, next) => {
     data: { soldNumbers },
   });
 });
+
+exports.recalculateWinners = asyncHandler(async (req, res, next) => {
+  const lottery = await lotteryService.recalculateWinners(req.params.id);
+  res.status(200).json({
+    status: 'success',
+    message: 'Winners recalculated successfully.',
+    data: { lottery },
+  });
+});

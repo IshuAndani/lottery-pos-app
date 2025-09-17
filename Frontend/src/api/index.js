@@ -251,6 +251,15 @@ export const declareWinners = async (lotteryId, winningNumbers) => {
   }
 };
 
+export const recalculateWinners = async (lotteryId) => {
+  try {
+    const response = await apiClient.post(`/lotteries/${lotteryId}/recalculate-winners`);
+    return response.data.data.lottery;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to recalculate winners');
+  }
+};
+
 export const getLotteryFinancials = async (lotteryId, params = {}) => {
   try {
     const response = await apiClient.get(`/reports/admin/lottery/${lotteryId}`, { params });

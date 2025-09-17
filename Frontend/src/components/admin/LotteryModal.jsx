@@ -12,7 +12,10 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
     'payoutRules.play3': 500,
     'payoutRules.play4': 2000,
     states: [],
-    maxPerNumber: 50,
+    'maxPerNumber.bolet': 50,
+    'maxPerNumber.mariage': 50,
+    'maxPerNumber.play3': 50,
+    'maxPerNumber.play4': 50,
     'betLimits.bolet.min': 1,
     'betLimits.bolet.max': 100,
     'betLimits.mariage.min': 1,
@@ -52,7 +55,10 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
         'payoutRules.play3': lottery.payoutRules?.play3 ?? 500,
         'payoutRules.play4': lottery.payoutRules?.play4 ?? 2000,
         states: lottery.states || [],
-        maxPerNumber: lottery.maxPerNumber ?? 50,
+        'maxPerNumber.bolet': lottery.maxPerNumber?.bolet ?? 50,
+        'maxPerNumber.mariage': lottery.maxPerNumber?.mariage ?? 50,
+        'maxPerNumber.play3': lottery.maxPerNumber?.play3 ?? 50,
+        'maxPerNumber.play4': lottery.maxPerNumber?.play4 ?? 50,
         'betLimits.bolet.min': lottery.betLimits?.bolet?.min ?? 1,
         'betLimits.bolet.max': lottery.betLimits?.bolet?.max ?? 100,
         'betLimits.mariage.min': lottery.betLimits?.mariage?.min ?? 1,
@@ -92,9 +98,17 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
       setError('Valid number range: min must be less than or equal to max.');
       return;
     }
-    if (Number(formData.maxPerNumber) <= 0) {
-      setError('Max price per number must be positive.');
-      return;
+    const maxPer = {
+      bolet: Number(formData['maxPerNumber.bolet']),
+      mariage: Number(formData['maxPerNumber.mariage']),
+      play3: Number(formData['maxPerNumber.play3']),
+      play4: Number(formData['maxPerNumber.play4']),
+    };
+    for (const k of Object.keys(maxPer)) {
+      if (isNaN(maxPer[k]) || maxPer[k] <= 0) {
+        setError('Per-type max price per number must be positive.');
+        return;
+      }
     }
     if (Number(formData.numberOfWinningNumbers) <= 0) {
       setError('Number of winning numbers must be positive.');
@@ -134,7 +148,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
         play4: Number(formData['payoutRules.play4']),
       },
       states: formData.states,
-      maxPerNumber: Number(formData.maxPerNumber),
+      maxPerNumber: maxPer,
       betLimits: bl,
     };
 
@@ -211,16 +225,57 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Max Price Per Number</label>
-            <input
-              type="number"
-              name="maxPerNumber"
-              min="1"
-              value={formData.maxPerNumber}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Max Price Per Number (Per Bet Type)</label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Bolet</label>
+                <input
+                  type="number"
+                  name="maxPerNumber.bolet"
+                  min="1"
+                  value={formData['maxPerNumber.bolet']}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Mariage</label>
+                <input
+                  type="number"
+                  name="maxPerNumber.mariage"
+                  min="1"
+                  value={formData['maxPerNumber.mariage']}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Play3</label>
+                <input
+                  type="number"
+                  name="maxPerNumber.play3"
+                  min="1"
+                  value={formData['maxPerNumber.play3']}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Play4</label>
+                <input
+                  type="number"
+                  name="maxPerNumber.play4"
+                  min="1"
+                  value={formData['maxPerNumber.play4']}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
+                />
+              </div>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Bolet Payout Multiplier (e.g., 50x)</label>

@@ -52,10 +52,18 @@ const lotterySchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  // Maximum allowed total amount sold per number, per bet type
+  // Can be provided as an object with keys per bet type.
+  // Example: { bolet: 50, mariage: 50, play3: 50, play4: 50 }
   maxPerNumber: {
-    type: Number,
-    required: false, // Optional, can be set per lottery
-    default: 50 // Default max per number if not specified
+    type: Object,
+    required: false,
+    default: {
+      bolet: 50,
+      mariage: 50,
+      play3: 50,
+      play4: 50,
+    }
   },
   numberOfWinningNumbers: {
     type: Number,

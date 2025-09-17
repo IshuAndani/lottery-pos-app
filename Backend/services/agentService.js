@@ -6,19 +6,19 @@ const sendEmail = require('../utils/email');
 const crypto = require('crypto');
 
 exports.createAgent = async (agentData) => {
-  // Generate a random password if one isn't provided.
-  const temporaryPassword = agentData.password || crypto.randomBytes(8).toString('hex');
+  if (!agentData.password || agentData.password.length < 6) {
+    throw new ApiError(400, 'Password is required and must be at least 6 characters.');
+  }
 
-  // Create the agent. The password will be hashed by the pre-save hook in userModel.
+  // Create the agent using the provided password. The password will be hashed by the pre-save hook in userModel.
   const newAgent = await User.create({
     ...agentData,
     role: 'agent',
-    password: temporaryPassword,
   });
 
   // After creating the user, send them their credentials via email.
   try {
-    const message = `Welcome to the Lottery POS system!\n\nYour agent account has been created.\n\nEmail: ${newAgent.email}\nPassword: ${temporaryPassword}\n\nPlease change your password after your first login.`;
+    const message = `Welcome to the Lottery POS system!\n\nYour agent account has been created.\n\nEmail: ${newAgent.email}\nPassword: ${agentData.password}\n\nPlease change your password after your first login.`;
 
     await sendEmail({
       from: 'Lottery POS Admin <admin@lottery.com>',
@@ -27,11 +27,7 @@ exports.createAgent = async (agentData) => {
       message,
     });
   } catch (error) {
-    // If email fails, the user is still created. Log the error for the admin.
-    // In a real app, you might want a more robust retry mechanism or notification system.
     console.error(`Failed to send welcome email to ${newAgent.email}:`, error);
-    // We don't want to fail the whole agent creation process if the email fails.
-    // The admin can manually provide the password.
   }
 
   return newAgent;
