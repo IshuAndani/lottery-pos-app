@@ -5,8 +5,8 @@ import axios from 'axios';
  * This instance will be used for all API requests throughout the application.
  */
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
-  // baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lottery-pos-app-bel1.onrender.com/api/v1',
+  // baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lottery-pos-app-bel1.onrender.com/api/v1',
 });
 
 // Add a request interceptor to attach the JWT token from localStorage
@@ -104,7 +104,7 @@ export const createTicket = async (ticketData) => {
     const response = await apiClient.post('/tickets', ticketData);
     return response.data.data.ticket;
   } catch (error) {
-    throw error.response.data || new Error('Failed to create ticket');
+    throw error.response?.data || new Error(error.message || 'Failed to create ticket');
   }
 };
 
@@ -113,7 +113,7 @@ export const getTicketById = async (ticketId) => {
     const response = await apiClient.get(`/tickets/${ticketId}`);
     return response.data.data.ticket;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch ticket');
+    throw error.response?.data || new Error(error.message || 'Failed to fetch ticket');
   }
 };
 
@@ -122,7 +122,7 @@ export const payoutTicket = async (ticketId) => {
     const response = await apiClient.post(`/tickets/${ticketId}/payout`);
     return response.data;
   } catch (error) {
-    throw error.response.data || new Error('Failed to process payout');
+    throw error.response?.data || new Error(error.message || 'Failed to process payout');
   }
 };
 
@@ -211,7 +211,7 @@ export const getAllLotteriesAdmin = async () => {
     const response = await apiClient.get('/lotteries');
     return response.data.data.lotteries;
   } catch (error) {
-    throw error.response.data || new Error('Failed to fetch lotteries');
+    throw error.response?.data || new Error(error.message || 'Failed to fetch lotteries');
   }
 };
 
@@ -220,7 +220,7 @@ export const createLottery = async (lotteryData) => {
     const response = await apiClient.post('/lotteries', lotteryData);
     return response.data.data.lottery;
   } catch (error) {
-    throw error.response.data || new Error('Failed to create lottery');
+    throw error.response?.data || new Error(error.message || 'Failed to create lottery');
   }
 };
 
@@ -229,7 +229,7 @@ export const updateLottery = async (lotteryId, lotteryData) => {
     const response = await apiClient.patch(`/lotteries/${lotteryId}`, lotteryData);
     return response.data.data.lottery;
   } catch (error) {
-    throw error.response.data || new Error('Failed to update lottery');
+    throw error.response?.data || new Error(error.message || 'Failed to update lottery');
   }
 };
 
@@ -247,7 +247,7 @@ export const declareWinners = async (lotteryId, winningNumbers) => {
     const response = await apiClient.post(`/lotteries/${lotteryId}/declare-winners`, { winningNumbers });
     return response.data.data.lottery;
   } catch (error) {
-    throw error.response.data || new Error('Failed to declare winners');
+    throw error.response?.data || new Error(error.message || 'Failed to declare winners');
   }
 };
 

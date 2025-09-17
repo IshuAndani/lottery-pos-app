@@ -55,7 +55,7 @@ exports.updateLottery = async (lotteryId, updateData) => {
   }
   if (updates.maxPerNumber) {
     // Accept either a number (legacy) or object per bet type
-    if (typeof updates.maxPerNumber === 'number') {
+    if (typeof updates.maxPerNumber === 'number' || typeof updates.maxPerNumber === 'string') {
       const n = Number(updates.maxPerNumber);
       if (isNaN(n) || n <= 0) {
         throw new ApiError(400, 'maxPerNumber must be a positive number.');
@@ -63,20 +63,32 @@ exports.updateLottery = async (lotteryId, updateData) => {
       updates.maxPerNumber = { bolet: n, mariage: n, play3: n, play4: n };
     } else if (typeof updates.maxPerNumber === 'object') {
       const keys = ['bolet', 'mariage', 'play3', 'play4'];
+      const merged = { ...(lottery.maxPerNumber || {}) };
       for (const k of keys) {
-        const v = Number(updates.maxPerNumber[k]);
+        const raw = updates.maxPerNumber[k];
+        if (raw === undefined || raw === null || raw === '') {
+          // keep existing value for this key
+          continue;
+        }
+        const v = Number(raw);
         if (isNaN(v) || v <= 0) {
           throw new ApiError(400, `maxPerNumber.${k} must be a positive number.`);
         }
-        updates.maxPerNumber[k] = v;
+        merged[k] = v;
       }
+      // Ensure all keys present after merge
+      for (const k of keys) {
+        if (merged[k] === undefined) {
+          // default to previous or 50 if not present
+          merged[k] = Number(lottery.maxPerNumber?.[k]) || 50;
+        }
+      }
+      updates.maxPerNumber = merged;
     } else {
       throw new ApiError(400, 'maxPerNumber must be a number or an object with per-type values.');
     }
   }
-  if (updates.maxPerNumber && (isNaN(updates.maxPerNumber) || updates.maxPerNumber <= 0)) {
-    throw new ApiError(400, 'maxPerNumber must be a positive number.');
-  }
+  // maxPerNumber is validated and normalized above; skip legacy numeric-only validation
   if (updates.numberOfWinningNumbers && (isNaN(updates.numberOfWinningNumbers) || updates.numberOfWinningNumbers <= 0)) {
     throw new ApiError(400, 'numberOfWinningNumbers must be a positive integer.');
   }
