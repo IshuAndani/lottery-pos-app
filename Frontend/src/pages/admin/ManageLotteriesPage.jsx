@@ -125,7 +125,22 @@ const ManageLotteriesPage = () => {
             Play4: {lottery.payoutRules.play4}
           </p>
           {lottery.status === 'completed' && (
-            <p className="font-semibold mt-2">Winners: {lottery.winningNumbers.join(', ')}</p>
+            <div className="mt-2">
+              <p className="font-semibold">Winners:</p>
+              {lottery.winningNumbers && typeof lottery.winningNumbers === 'object' && !Array.isArray(lottery.winningNumbers) ? (
+                <div className="text-sm">
+                  {Object.entries(lottery.winningNumbers).map(([betType, numbers]) => (
+                    <p key={betType} className="capitalize">
+                      {betType}: {Array.isArray(numbers) ? numbers.join(', ') : 'N/A'}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm">
+                  {Array.isArray(lottery.winningNumbers) ? lottery.winningNumbers.join(', ') : 'N/A'}
+                </p>
+              )}
+            </div>
           )}
           <div className="mt-4 flex flex-col gap-2">
             {lottery.status === 'closed' && (

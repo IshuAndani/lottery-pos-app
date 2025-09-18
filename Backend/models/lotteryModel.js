@@ -32,10 +32,20 @@ const lotterySchema = new mongoose.Schema({
       play4: { min: 1, max: 20 },
     },
   },
-  // A simple array of winning numbers declared by the admin.
+  // Winning numbers per bet type declared by the admin.
   winningNumbers: {
-    type: [String],
-    default: [],
+    type: {
+      bolet: { type: [String], default: [] },
+      mariage: { type: [String], default: [] },
+      play3: { type: [String], default: [] },
+      play4: { type: [String], default: [] }
+    },
+    default: {
+      bolet: [],
+      mariage: [],
+      play3: [],
+      play4: []
+    }
   },
   drawDate: {
     type: Date,
@@ -64,10 +74,6 @@ const lotterySchema = new mongoose.Schema({
       play3: 50,
       play4: 50,
     }
-  },
-  numberOfWinningNumbers: {
-    type: Number,
-    required: [true, 'The number of winning numbers is required.'],
   },
   // NEW: List of states where the lottery is available
   states: {

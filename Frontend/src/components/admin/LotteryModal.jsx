@@ -4,7 +4,6 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
   const [formData, setFormData] = useState({
     name: '',
     drawDate: '',
-    numberOfWinningNumbers: 1,
     'validNumberRange.min': 0,
     'validNumberRange.max': 99,
     'payoutRules.bolet': 50,
@@ -47,7 +46,6 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
       setFormData({
         name: lottery.name || '',
         drawDate: lottery.drawDate ? new Date(lottery.drawDate).toISOString().slice(0, 16) : '',
-        numberOfWinningNumbers: lottery.numberOfWinningNumbers || 1,
         'validNumberRange.min': lottery.validNumberRange?.min ?? 0,
         'validNumberRange.max': lottery.validNumberRange?.max ?? 99,
         'payoutRules.bolet': lottery.payoutRules?.bolet ?? 50,
@@ -110,10 +108,6 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
         return;
       }
     }
-    if (Number(formData.numberOfWinningNumbers) <= 0) {
-      setError('Number of winning numbers must be positive.');
-      return;
-    }
     const bl = {
       bolet: { min: Number(formData['betLimits.bolet.min']), max: Number(formData['betLimits.bolet.max']) },
       mariage: { min: Number(formData['betLimits.mariage.min']), max: Number(formData['betLimits.mariage.max']) },
@@ -136,7 +130,6 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
     const payload = {
       name: formData.name,
       drawDate: formData.drawDate,
-      numberOfWinningNumbers: Number(formData.numberOfWinningNumbers),
       validNumberRange: {
         min: Number(formData['validNumberRange.min']),
         max: Number(formData['validNumberRange.max']),
@@ -185,18 +178,6 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
               type="datetime-local"
               name="drawDate"
               value={formData.drawDate}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Number of Winning Numbers</label>
-            <input
-              type="number"
-              name="numberOfWinningNumbers"
-              min="1"
-              value={formData.numberOfWinningNumbers}
               onChange={handleChange}
               required
               className="block w-full rounded-md border-2 border-gray-400 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 py-3 px-4 text-base touch-manipulation"
@@ -278,7 +259,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Bolet Payout Multiplier (e.g., 50x)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Bolet Payout Multiplier (GD, e.g., 50x)</label>
             <input
               type="number"
               name="payoutRules.bolet"
@@ -290,7 +271,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Mariage Payout Multiplier (e.g., 1000x)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Mariage Payout Multiplier (GD, e.g., 1000x)</label>
             <input
               type="number"
               name="payoutRules.mariage"
@@ -302,7 +283,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Play3 Payout Multiplier (e.g., 500x)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Play3 Payout Multiplier (GD, e.g., 500x)</label>
             <input
               type="number"
               name="payoutRules.play3"
@@ -314,7 +295,7 @@ const LotteryModal = ({ isOpen, onClose, onSave, lottery }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Play4 Payout Multiplier (e.g., 2000x)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Play4 Payout Multiplier (GD, e.g., 2000x)</label>
             <input
               type="number"
               name="payoutRules.play4"

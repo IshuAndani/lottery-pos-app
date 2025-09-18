@@ -30,7 +30,6 @@ exports.updateLottery = async (lotteryId, updateData) => {
     'drawDate',
     'validNumberRange',
     'maxPerNumber',
-    'numberOfWinningNumbers',
     'payoutRules',
     'states',
     'betLimits'
@@ -89,9 +88,6 @@ exports.updateLottery = async (lotteryId, updateData) => {
     }
   }
   // maxPerNumber is validated and normalized above; skip legacy numeric-only validation
-  if (updates.numberOfWinningNumbers && (isNaN(updates.numberOfWinningNumbers) || updates.numberOfWinningNumbers <= 0)) {
-    throw new ApiError(400, 'numberOfWinningNumbers must be a positive integer.');
-  }
 
   //if lottery date in future then change status to open
   if (updates.drawDate && new Date(updates.drawDate) > new Date()) {
@@ -125,7 +121,7 @@ exports.deleteLottery = async (lotteryId) => {
 };
 
 // Declare winning numbers and evaluate all tickets
-exports.declareWinningNumbers = async (lotteryId, winningNumbers) => {
+exports.declareWinningNumbers = async (lotteryId, winningNumbersByType) => {
   const lottery = await Lottery.findById(lotteryId);
   if (!lottery) {
     throw new ApiError(404, 'Lottery not found.');
@@ -133,18 +129,35 @@ exports.declareWinningNumbers = async (lotteryId, winningNumbers) => {
   if (lottery.status !== 'closed') {
     throw new ApiError(400, 'Lottery must be closed before declaring winners.');
   }
-  if (winningNumbers.length !== lottery.numberOfWinningNumbers) {
-    throw new ApiError(400, `Invalid number of winners. Expected ${lottery.numberOfWinningNumbers}.`);
+
+  // Validate winning numbers structure
+  const betTypes = ['bolet', 'mariage', 'play3', 'play4'];
+  for (const betType of betTypes) {
+    if (!winningNumbersByType[betType] || !Array.isArray(winningNumbersByType[betType])) {
+      throw new ApiError(400, `Winning numbers for ${betType} must be provided as an array.`);
+    }
+    
+    if (betType === 'mariage') {
+      // Mariage should have exactly one combination
+      if (winningNumbersByType[betType].length !== 1) {
+        throw new ApiError(400, 'Mariage must have exactly one winning combination.');
+      }
+    } else {
+      // Other bet types should have at least one winner
+      if (winningNumbersByType[betType].length === 0) {
+        throw new ApiError(400, `${betType} must have at least one winning number.`);
+      }
+    }
   }
 
   // Update lottery with winning numbers and set status to completed
-  lottery.winningNumbers = winningNumbers;
+  lottery.winningNumbers = winningNumbersByType;
   lottery.status = 'completed';
   await lottery.save();
 
   // Find all tickets for this lottery
   const tickets = await Ticket.find({ lottery: lotteryId });
-  const payoutRules = lottery.payoutRules || { bolet: 50, mariage: 1000 };
+  const payoutRules = lottery.payoutRules || { bolet: 50, mariage: 1000, play3: 500, play4: 2000 };
 
   // Normalize winning numbers for comparison (handles values like '07' vs '7')
   const normalizeNumber = (n) => {
@@ -154,30 +167,62 @@ exports.declareWinningNumbers = async (lotteryId, winningNumbers) => {
     const numeric = Number(trimmed);
     return isNaN(numeric) ? trimmed : String(numeric);
   };
-  const normalizedWinningSet = new Set((winningNumbers || []).map(normalizeNumber));
+
+  // Create normalized winning sets for each bet type
+  const normalizedWinningSets = {};
+  for (const betType of betTypes) {
+    if (betType === 'mariage') {
+      // For mariage, parse the combination and create a set of both numbers
+      const combination = winningNumbersByType[betType][0];
+      const parts = combination.split('-');
+      if (parts.length === 2) {
+        const num1 = normalizeNumber(parts[0]);
+        const num2 = normalizeNumber(parts[1]);
+        normalizedWinningSets[betType] = new Set([num1, num2]);
+      } else {
+        normalizedWinningSets[betType] = new Set();
+      }
+    } else {
+      normalizedWinningSets[betType] = new Set((winningNumbersByType[betType] || []).map(normalizeNumber));
+    }
+  }
 
   // Evaluate each ticket
   for (const ticket of tickets) {
     let isWinner = false;
     let payoutAmount = 0;
     for (const bet of ticket.bets) {
-      if (bet.betType === 'bolet') {
+      const betType = bet.betType;
+      const normalizedSet = normalizedWinningSets[betType];
+      
+      if (betType === 'bolet') {
         const betNum = normalizeNumber(bet.numbers[0]);
-        if (normalizedWinningSet.has(betNum)) {
+        if (normalizedSet.has(betNum)) {
           isWinner = true;
           payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('bolet') : payoutRules.bolet);
         }
-      } else if (bet.betType === 'mariage') {
+      } else if (betType === 'mariage') {
         if (
           bet.numbers.length === 2 &&
-          normalizedWinningSet.has(normalizeNumber(bet.numbers[0])) &&
-          normalizedWinningSet.has(normalizeNumber(bet.numbers[1]))
+          normalizedSet.has(normalizeNumber(bet.numbers[0])) &&
+          normalizedSet.has(normalizeNumber(bet.numbers[1]))
         ) {
           isWinner = true;
           payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('mariage') : payoutRules.mariage);
         }
+      } else if (betType === 'play3') {
+        const betNum = normalizeNumber(bet.numbers[0]);
+        if (normalizedSet.has(betNum)) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('play3') : payoutRules.play3);
+        }
+      } else if (betType === 'play4') {
+        const betNum = normalizeNumber(bet.numbers[0]);
+        if (normalizedSet.has(betNum)) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('play4') : payoutRules.play4);
+        }
       }
-      // Note: play3 and play4 not included in winner evaluation per current logic
     }
     ticket.isWinner = isWinner;
     ticket.payoutAmount = payoutAmount;
@@ -193,15 +238,15 @@ exports.recalculateWinners = async (lotteryId) => {
   if (!lottery) {
     throw new ApiError(404, 'Lottery not found.');
   }
-  if (!lottery.winningNumbers || lottery.winningNumbers.length === 0) {
+  if (!lottery.winningNumbers || Object.keys(lottery.winningNumbers).length === 0) {
     throw new ApiError(400, 'No winning numbers set for this lottery.');
   }
 
-  const winningNumbers = lottery.winningNumbers;
+  const winningNumbersByType = lottery.winningNumbers;
 
   // Find all tickets for this lottery
   const tickets = await Ticket.find({ lottery: lotteryId });
-  const payoutRules = lottery.payoutRules || { bolet: 50, mariage: 1000 };
+  const payoutRules = lottery.payoutRules || { bolet: 50, mariage: 1000, play3: 500, play4: 2000 };
 
   // Normalize winning numbers for comparison (handles values like '07' vs '7')
   const normalizeNumber = (n) => {
@@ -211,27 +256,61 @@ exports.recalculateWinners = async (lotteryId) => {
     const numeric = Number(trimmed);
     return isNaN(numeric) ? trimmed : String(numeric);
   };
-  const normalizedWinningSet = new Set((winningNumbers || []).map(normalizeNumber));
+
+  // Create normalized winning sets for each bet type
+  const betTypes = ['bolet', 'mariage', 'play3', 'play4'];
+  const normalizedWinningSets = {};
+  for (const betType of betTypes) {
+    if (betType === 'mariage') {
+      // For mariage, parse the combination and create a set of both numbers
+      const combination = winningNumbersByType[betType][0];
+      const parts = combination.split('-');
+      if (parts.length === 2) {
+        const num1 = normalizeNumber(parts[0]);
+        const num2 = normalizeNumber(parts[1]);
+        normalizedWinningSets[betType] = new Set([num1, num2]);
+      } else {
+        normalizedWinningSets[betType] = new Set();
+      }
+    } else {
+      normalizedWinningSets[betType] = new Set((winningNumbersByType[betType] || []).map(normalizeNumber));
+    }
+  }
 
   // Evaluate each ticket
   for (const ticket of tickets) {
     let isWinner = false;
     let payoutAmount = 0;
     for (const bet of ticket.bets) {
-      if (bet.betType === 'bolet') {
+      const betType = bet.betType;
+      const normalizedSet = normalizedWinningSets[betType];
+      
+      if (betType === 'bolet') {
         const betNum = normalizeNumber(bet.numbers[0]);
-        if (normalizedWinningSet.has(betNum)) {
+        if (normalizedSet.has(betNum)) {
           isWinner = true;
           payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('bolet') : payoutRules.bolet);
         }
-      } else if (bet.betType === 'mariage') {
+      } else if (betType === 'mariage') {
         if (
           bet.numbers.length === 2 &&
-          normalizedWinningSet.has(normalizeNumber(bet.numbers[0])) &&
-          normalizedWinningSet.has(normalizeNumber(bet.numbers[1]))
+          normalizedSet.has(normalizeNumber(bet.numbers[0])) &&
+          normalizedSet.has(normalizeNumber(bet.numbers[1]))
         ) {
           isWinner = true;
           payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('mariage') : payoutRules.mariage);
+        }
+      } else if (betType === 'play3') {
+        const betNum = normalizeNumber(bet.numbers[0]);
+        if (normalizedSet.has(betNum)) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('play3') : payoutRules.play3);
+        }
+      } else if (betType === 'play4') {
+        const betNum = normalizeNumber(bet.numbers[0]);
+        if (normalizedSet.has(betNum)) {
+          isWinner = true;
+          payoutAmount += bet.amounts[0] * (payoutRules.get ? payoutRules.get('play4') : payoutRules.play4);
         }
       }
     }

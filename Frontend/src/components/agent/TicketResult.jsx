@@ -31,7 +31,7 @@ const TicketReceipt = ({ ticket, onClose }) => {
           ))}
         </ul>
       </div>
-      <div className="font-bold mt-2">Total: ${ticket.totalAmount}</div>
+      <div className="font-bold mt-2">Total: GD {ticket.totalAmount}</div>
       <hr className="my-2" />
       <div className="text-center text-xs mt-2">Thank you for playing!</div>
       <div className="flex justify-center mt-4">
@@ -71,10 +71,10 @@ const TicketResult = ({ ticket, onPayoutSuccess }) => {
   if (isLotteryCompleted) {
     if (isWinner) {
       resultStyle = 'border-green-500 bg-green-50';
-      resultMessage = `Congratulations! This is a winning ticket! Amount: $${ticket.payoutAmount}`;
+      resultMessage = `Congratulations! This is a winning ticket! Amount: GD ${ticket.payoutAmount}`;
       if (isPaidOut) {
         resultStyle = 'border-yellow-500 bg-yellow-50';
-        resultMessage = `This ticket has already been paid out. Amount: $${ticket.payoutAmount}`;
+        resultMessage = `This ticket has already been paid out. Amount: GD ${ticket.payoutAmount}`;
       }
     } else {
       resultStyle = 'border-red-500 bg-red-50';
@@ -94,7 +94,7 @@ const TicketResult = ({ ticket, onPayoutSuccess }) => {
             disabled={isPayingOut}
             className="bg-green-600 text-white font-bold py-2 px-4 rounded hover:bg-green-700 disabled:bg-gray-400"
           >
-            {isPayingOut ? 'Processing Payout...' : `Pay Out $${ticket.payoutAmount}`}
+            {isPayingOut ? 'Processing Payout...' : `Pay Out GD ${ticket.payoutAmount}`}
           </button>
         </div>
       )}

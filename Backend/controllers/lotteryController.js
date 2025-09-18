@@ -2,7 +2,7 @@ const lotteryService = require('../services/lotteryService');
 const asyncHandler = require('../utils/asyncHandler');
 
 exports.createLottery = asyncHandler(async (req, res, next) => {
-  const { name, drawDate, validNumberRange, maxPerNumber, numberOfWinningNumbers, payoutRules, states } = req.body;
+  const { name, drawDate, validNumberRange, maxPerNumber, payoutRules, states } = req.body;
   
   // Validate payoutRules to ensure 'bolet', 'mariage', 'play3', and 'play4' are included
   if (!payoutRules || !payoutRules.bolet || !payoutRules.mariage || !payoutRules.play3 || !payoutRules.play4) {
@@ -25,7 +25,6 @@ exports.createLottery = asyncHandler(async (req, res, next) => {
     drawDate,
     validNumberRange,
     maxPerNumber,
-    numberOfWinningNumbers,
     payoutRules,
     states
   });
@@ -46,7 +45,7 @@ exports.getAllLotteries = asyncHandler(async (req, res, next) => {
 });
 
 exports.updateLottery = asyncHandler(async (req, res, next) => {
-  const { name, drawDate, validNumberRange, maxPerNumber, numberOfWinningNumbers, payoutRules, states } = req.body;
+  const { name, drawDate, validNumberRange, maxPerNumber, payoutRules, states } = req.body;
 
   // Validate payoutRules if provided
   if (payoutRules && (!payoutRules.bolet || !payoutRules.mariage)) {
@@ -69,7 +68,6 @@ exports.updateLottery = asyncHandler(async (req, res, next) => {
     drawDate,
     validNumberRange,
     maxPerNumber,
-    numberOfWinningNumbers,
     payoutRules,
     states
   });
